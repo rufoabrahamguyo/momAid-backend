@@ -1,28 +1,25 @@
-"""Custom user model for MumAid (phone-based authentication)."""
-
-import secrets
-from typing import Any
-
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from django.db import models
-from django.utils import timezone
+import uuid
 
 
 class UserManager(BaseUserManager):
-    """Manager for phone-identified users."""
+    """Manager for email users."""
 
-    def create_user(self, phone: str, password: str | None = None, **extra_fields: Any) -> "User":
-        if not phone:
-            raise ValueError("The phone number must be set")
-        user = self.model(phone=phone, **extra_fields)
+    def create_user(self, email,  password=None, **extra_fields):
+        if not email:
+            raise ValueError("The Email must be set")
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+
         if password:
             user.set_password(password)
         else:
             user.set_unusable_password()
+
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, phone: str, password: str | None = None, **extra_fields: Any) -> "User":
+    def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("role", User.Role.ADMIN)
@@ -30,61 +27,71 @@ class UserManager(BaseUserManager):
             raise ValueError("Superuser must have is_staff=True.")
         if extra_fields.get("is_superuser") is not True:
             raise ValueError("Superuser must have is_superuser=True.")
-        return self.create_user(phone, password, **extra_fields)
+        return self.create_user(email, password, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    """Application user identified by phone number."""
-
     class Role(models.TextChoices):
         MOTHER = "mother", "Mother"
         PARTNER = "partner", "Partner"
         ADMIN = "admin", "Admin"
 
-    phone = models.CharField(max_length=20, unique=True, db_index=True)
-    role = models.CharField(max_length=20, choices=Role.choices, default=Role.MOTHER)
-
-    support_person_name = models.CharField(max_length=200, blank=True)
-    support_person_phone = models.CharField(max_length=20, blank=True)
-
-    ob_name = models.CharField(max_length=200, blank=True)
-    ob_phone = models.CharField(max_length=20, blank=True)
-    ob_email = models.EmailField(blank=True)
-
-    partner = models.ForeignKey(
-        "self",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="linked_mothers",
-    )
-
-    baby_due_date = models.DateField(null=True, blank=True)
-    baby_birth_date = models.DateField(null=True, blank=True)
-
-    biometric_enabled = models.BooleanField(default=False)
-    push_notifications_enabled = models.BooleanField(default=True)
-
-    unique_code = models.CharField(max_length=16, unique=True, blank=True, null=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    email = models.EmailField(max_length=50, unique=True, db_index=True)
+    role = models.CharField(max_length=20, choices=Role.choices)
 
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    joined_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = UserManager()
 
-    USERNAME_FIELD = "phone"
-    REQUIRED_FIELDS: list[str] = []
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
 
-    class Meta:
-        ordering = ["-created_at"]
+    def __str__(self):
+        return self.email
 
-    def save(self, *args: Any, **kwargs: Any) -> None:
-        if self.role == self.Role.MOTHER and not self.unique_code:
-            self.unique_code = secrets.token_hex(4)
-        super().save(*args, **kwargs)
 
-    def __str__(self) -> str:
-        return str(self.phone)
+class MotherProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="mother_profile")
+
+    baby_due_date = models.DateField(null=True, blank=True)
+    baby_birth_date = models.DateField(null=True, blank=True)
+
+    partner = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assigned_mothers",
+        limit_choices_to={"role": User.Role.PARTNER},
+    )
+
+    push_notifications_enabled = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Mother Profile: {self.user.email}"
+
+
+class SupportContact(models.Model):
+    class ContactType(models.TextChoices):
+        PERSONAL = "personal", "Personal Support"
+        OB = "ob", "Obstetrician"
+
+    mother = models.ForeignKey(
+        MotherProfile,
+        on_delete=models.CASCADE,
+        related_name="support_contacts"
+    )
+
+    name = models.CharField(max_length=200)
+    phone = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
+
+    type = models.CharField(max_length=20, choices=ContactType.choices)
+
+    def __str__(self):
+        return f"{self.name} ({self.type})"
