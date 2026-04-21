@@ -1,16 +1,16 @@
-"""Authentication views using SimpleJWT."""
-
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import RegisterSerializer, UserSerializer, LoginSerializer
+from .helpers import generate_email_otp, verify_email_otp
 
 User = get_user_model()
+
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -18,34 +18,21 @@ class RegisterView(APIView):
     def post(self, request):
         try:
             serializer = RegisterSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = serializer.save(is_active=False)
+            email = user.email
+            generate_email_otp(email)
 
-            if serializer.is_valid(exceptions=True):
-                user = serializer.save()
-                
+            return Response(
+                {"detail": "User created. Please activate your account."},
+                status=status.HTTP_201_CREATED
+            )
 
-            return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
-
-
-class LoginView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        ser = LoginSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-
-        user = ser.validated_data["user"]
-
-        refresh = RefreshToken.for_user(user)
-
-        return Response(
-            {
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-                "user": UserSerializer(user).data,
-            },
-            status=status.HTTP_200_OK,
-        )
-
+        except Exception as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class UserProfileView(APIView):
@@ -60,15 +47,65 @@ class UserProfileView(APIView):
         ser.save()
         return Response(ser.data)
 
+
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         try:
             refresh_token = request.data.get("refresh")
-            token = RefreshToken(refresh_token)
-            token.blacklist()  # only works if blacklist app enabled
-        except Exception:
-            pass
 
-        return Response(status=status.HTTP_205_RESET_CONTENT)
+            if not refresh_token:
+                return Response(
+                    {'detail': 'Refresh token required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+
+        except TokenError as e:
+            return Response({'detail': str(e)}, status=400)
+
+        except InvalidToken as e:
+            return Response({'detail': str(e)}, status=400)
+
+        except Exception as e:
+            return Response({'detail': str(e)}, status=500)
+
+class VerifyTokenView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        try:
+            email = request.data.get("email")
+            user_otp = request.data.get("otp")
+
+            if not email or not user_otp:
+                return Response({"detail": "Email and OTP required"}, status=400)
+
+            user = User.objects.filter(email=email).first()
+
+            if not user:
+                return Response({"detail": "User not found"}, status=404)
+
+            verification_success = verify_email_otp(email, user_otp)
+
+            if verification_success:
+                user.is_active = True
+                user.save()
+
+                return Response(
+                    {"detail": "Email verified successfully"},
+                    status=200
+                )
+
+            return Response(
+                {"detail": "Invalid or expired OTP"},
+                status=400
+            )
+
+        except Exception as e:
+            return Response({"detail": str(e)}, status=500)
