@@ -1,106 +1,74 @@
-"""Authentication views: OTP flow and profile."""
+"""Authentication views using SimpleJWT."""
 
-from __future__ import annotations
-
-import hashlib
-import random
-import re
-
-from django.conf import settings
-from django.core.cache import cache
 from django.contrib.auth import get_user_model
-from knox.models import AuthToken
-from knox.views import LogoutView as KnoxLogoutView
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.accounts.serializers import RegisterSerializer, UserSerializer, VerifyOTPSerializer
-from apps.accounts.throttles import AuthThrottle
-from apps.notifications.tasks import send_otp_sms
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from .serializers import RegisterSerializer, UserSerializer, LoginSerializer
 
 User = get_user_model()
 
-OTP_CACHE_PREFIX = "otp_hash:"
-
-
-def _normalize_phone(phone: str) -> str:
-    return re.sub(r"\s+", "", phone.strip())
-
-
-def _hash_otp(otp: str) -> str:
-    return hashlib.sha256(otp.encode("utf-8")).hexdigest()
-
-
-def _generate_otp() -> str:
-    return f"{random.randint(0, 999999):06d}"
-
-
 class RegisterView(APIView):
-    """Send a 6-digit OTP to the given phone (stored hashed in cache)."""
-
     permission_classes = [AllowAny]
-    throttle_classes = [AuthThrottle]
 
-    def post(self, request: Request) -> Response:
-        ser = RegisterSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        phone = _normalize_phone(ser.validated_data["phone"])
-        otp = _generate_otp()
-        cache_key = f"{OTP_CACHE_PREFIX}{phone}"
-        cache.set(cache_key, _hash_otp(otp), timeout=settings.OTP_EXPIRY_SECONDS)
-        send_otp_sms.delay(phone, otp)
-        return Response({"detail": "OTP sent."}, status=status.HTTP_200_OK)
+    def post(self, request):
+        try:
+            serializer = RegisterSerializer(data=request.data)
+
+            if serializer.is_valid(exceptions=True):
+                user = serializer.save()
+                
+
+            return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
 
 
-class VerifyOTPView(APIView):
-    """Verify OTP and return a Knox token (creates user if new)."""
-
+class LoginView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [AuthThrottle]
 
-    def post(self, request: Request) -> Response:
-        ser = VerifyOTPSerializer(data=request.data)
+    def post(self, request):
+        ser = LoginSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
-        phone = _normalize_phone(ser.validated_data["phone"])
-        otp = ser.validated_data["otp"].strip()
-        cache_key = f"{OTP_CACHE_PREFIX}{phone}"
-        stored = cache.get(cache_key)
-        if not stored or stored != _hash_otp(otp):
-            return Response(
-                {"error": "Invalid or expired OTP.", "detail": "Invalid or expired OTP."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        cache.delete(cache_key)
-        user, _created = User.objects.get_or_create(
-            phone=phone,
-            defaults={"role": User.Role.MOTHER},
+
+        user = ser.validated_data["user"]
+
+        refresh = RefreshToken.for_user(user)
+
+        return Response(
+            {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "user": UserSerializer(user).data,
+            },
+            status=status.HTTP_200_OK,
         )
-        token_instance, token = AuthToken.objects.create(user=user)
-        data = UserSerializer(user).data
-        data["token"] = token
-        data["expiry"] = token_instance.expiry
-        return Response(data, status=status.HTTP_200_OK)
+
 
 
 class UserProfileView(APIView):
-    """Retrieve or update the authenticated user profile."""
-
     permission_classes = [IsAuthenticated]
 
-    def get(self, request: Request) -> Response:
+    def get(self, request):
         return Response(UserSerializer(request.user).data)
 
-    def patch(self, request: Request) -> Response:
+    def patch(self, request):
         ser = UserSerializer(request.user, data=request.data, partial=True)
         ser.is_valid(raise_exception=True)
         ser.save()
         return Response(ser.data)
 
-
-class LogoutAPIView(KnoxLogoutView):
-    """Invalidate the current Knox token."""
-
+class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data.get("refresh")
+            token = RefreshToken(refresh_token)
+            token.blacklist()  # only works if blacklist app enabled
+        except Exception:
+            pass
+
+        return Response(status=status.HTTP_205_RESET_CONTENT)
