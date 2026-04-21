@@ -1,45 +1,68 @@
-"""Serializers for accounts and authentication."""
+
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from .models import MotherProfile, SupportContact
 
 User = get_user_model()
 
 
+class SupportContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SupportContact
+        fields = "__all__"
+
+
+class MotherProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MotherProfile
+        fields = "__all__"
+
+
 class UserSerializer(serializers.ModelSerializer):
-    """Read/update profile for the authenticated user."""
+    mother_profile = MotherProfileSerializer(read_only=True)
 
     class Meta:
         model = User
-        fields = (
+        fields = [
             "id",
-            "phone",
+            "email",
             "role",
-            "support_person_name",
-            "support_person_phone",
-            "ob_name",
-            "ob_phone",
-            "ob_email",
-            "partner_id",
-            "unique_code",
-            "baby_due_date",
-            "baby_birth_date",
-            "biometric_enabled",
-            "push_notifications_enabled",
-            "created_at",
+            "is_active",
+            "joined_at",
             "updated_at",
-        )
-        read_only_fields = ("id", "phone", "role", "partner_id", "unique_code", "created_at", "updated_at")
+            "mother_profile",
+        ]
 
 
-class RegisterSerializer(serializers.Serializer):
-    """Request OTP for the given phone number."""
+class RegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["email", "password", "role"]
+        extra_kwargs = {"password": {"write_only": True}}
 
-    phone = serializers.CharField(max_length=20)
+    def create(self, validated_data):
+        password = validated_data.pop("password", None)
+        user = User.objects.create_user(password=password, **validated_data)
+
+        if user.role == User.Role.MOTHER:
+            MotherProfile.objects.create(user=user)
+
+        return user
 
 
-class VerifyOTPSerializer(serializers.Serializer):
-    """Verify OTP and issue an auth token."""
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
 
-    phone = serializers.CharField(max_length=20)
-    otp = serializers.CharField(max_length=10, write_only=True)
+    def validate(self, attrs):
+        email = attrs.get("email")
+        password = attrs.get("password")
+
+        user = User.objects.filter(email=email).first()
+
+        if not user or not user.check_password(password):
+            raise serializers.ValidationError("Invalid credentials")
+
+        attrs["user"] = user
+        return attrs

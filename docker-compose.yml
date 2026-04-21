@@ -40,5 +40,14 @@ services:
     env_file:
       - .env
 
+  celery:
+    build: .
+    command: celery -A mumaid worker --loglevel=info
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - .env
+
 volumes:
   postgres_data:
