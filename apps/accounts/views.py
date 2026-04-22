@@ -109,3 +109,19 @@ class VerifyTokenView(APIView):
 
         except Exception as e:
             return Response({"detail": str(e)}, status=500)
+
+
+class CurrentUserView(APIView):
+
+    def get(self, request):
+        user = request.user
+
+        if not user.is_active:
+            return Response(
+                {"detail": "You need to activate your account"},
+                status==403
+            )
+
+        serializer = UserSerializer(user)
+
+        return Response(serializer.data, status=200)
