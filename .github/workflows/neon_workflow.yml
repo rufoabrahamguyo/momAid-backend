@@ -67,7 +67,7 @@ jobs:
           if not raw:
               raise SystemExit(
                   "DB_URL is empty. For neondatabase/create-branch-action@v6 use "
-                  "outputs.db_url_pooled or db_url."
+                  "outputs.db_url (direct) or db_url_pooled."
               )
           if raw.startswith("postgresql://"):
               raw = "postgres://" + raw[len("postgresql://") :]
@@ -86,8 +86,9 @@ jobs:
               f.write(f"POSTGRES_NAME={name}\n")
           EOF
         env:
-          
-          DB_URL: ${{ steps.create_neon_branch.outputs.db_url_pooled || steps.create_neon_branch.outputs.db_url }}
+          # Prefer direct db_url for migrate: pooled (-pooler) host often errors right after branch create
+          # ("endpoint could not be found") with psycopg2; pooler is better for app traffic, not DDL.
+          DB_URL: ${{ steps.create_neon_branch.outputs.db_url || steps.create_neon_branch.outputs.db_url_pooled }}
 
       - name: Migrate preview database
         env:
