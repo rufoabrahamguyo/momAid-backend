@@ -14,5 +14,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Build-time settings only (real secrets come from the host e.g. Render).
+RUN SECRET_KEY=collectstatic-build-only-not-secret \
+    DJANGO_ENV=dev \
+    ALLOWED_HOSTS=localhost \
+    python manage.py collectstatic --noinput
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["sh", "-c", "gunicorn mumaid.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]

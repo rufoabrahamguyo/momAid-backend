@@ -56,6 +56,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -90,6 +91,15 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -189,8 +199,8 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
 
-CLIENT_GOOGLE_ID = env("CLIENT_GOOGLE_ID")
-CLIENT_GOOGLE_SECRET = env("CLIENT_GOOGLE_SECRET")
-CLIENT_GOOGLE_REDIRECT=env("CLIENT_GOOGLE_REDIRECT")
+CLIENT_GOOGLE_ID = env("CLIENT_GOOGLE_ID", default="")
+CLIENT_GOOGLE_SECRET = env("CLIENT_GOOGLE_SECRET", default="")
+CLIENT_GOOGLE_REDIRECT = env("CLIENT_GOOGLE_REDIRECT", default="")
 
 

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -119,7 +120,7 @@ class CurrentUserView(APIView):
         if not user.is_active:
             return Response(
                 {"detail": "You need to activate your account"},
-                status==403
+                status=403,
             )
 
         serializer = UserSerializer(user)
@@ -132,6 +133,14 @@ class GoogleLoginView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
+        if not settings.CLIENT_GOOGLE_ID or not settings.CLIENT_GOOGLE_REDIRECT:
+            return Response(
+                {
+                    "detail": "Google sign-in is not configured "
+                    "(CLIENT_GOOGLE_ID / CLIENT_GOOGLE_REDIRECT)."
+                },
+                status=503,
+            )
         return google_login()
 
 
