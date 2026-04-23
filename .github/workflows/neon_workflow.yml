@@ -26,7 +26,8 @@ jobs:
     name: Create Neon Branch
     outputs:
       db_url: ${{ steps.create_neon_branch.outputs.db_url }}
-      db_url_with_pooler: ${{ steps.create_neon_branch.outputs.db_url_with_pooler }}
+      # v6 exposes pooled URL as db_url_pooled (not db_url_with_pooler).
+      db_url_pooled: ${{ steps.create_neon_branch.outputs.db_url_pooled }}
     needs: setup
     if: |
       github.event_name == 'pull_request' && (
@@ -62,7 +63,12 @@ jobs:
           import os
           from urllib.parse import urlparse, unquote
 
-          raw = os.environ["DB_URL"]
+          raw = (os.environ.get("DB_URL") or "").strip()
+          if not raw:
+              raise SystemExit(
+                  "DB_URL is empty. For neondatabase/create-branch-action@v6 use "
+                  "outputs.db_url_pooled or db_url."
+              )
           if raw.startswith("postgresql://"):
               raw = "postgres://" + raw[len("postgresql://") :]
           p = urlparse(raw)
@@ -80,7 +86,8 @@ jobs:
               f.write(f"POSTGRES_NAME={name}\n")
           EOF
         env:
-          DB_URL: ${{ steps.create_neon_branch.outputs.db_url_with_pooler }}
+          
+          DB_URL: ${{ steps.create_neon_branch.outputs.db_url_pooled || steps.create_neon_branch.outputs.db_url }}
 
       - name: Migrate preview database
         env:
