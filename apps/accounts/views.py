@@ -7,7 +7,7 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import RegisterSerializer, UserSerializer, LoginSerializer
-from .helpers import generate_email_otp, verify_email_otp
+from .helpers import generate_email_otp, verify_email_otp,google_login, get_google_token, get_google_user_info
 
 User = get_user_model()
 
@@ -125,3 +125,43 @@ class CurrentUserView(APIView):
         serializer = UserSerializer(user)
 
         return Response(serializer.data, status=200)
+
+
+
+class GoogleLoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        return google_login()
+
+
+class GoogleCallbackView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        code = request.GET.get("code")
+
+        if not code:
+            return Response({"error": "No code provided"}, status=400)
+
+        access_token = get_google_token(code)
+
+        user_data = get_google_user_info(access_token)
+
+        email = user_data["email"]
+
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                "is_active": True,
+                "role": "mother",
+            }
+        )
+
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "email": email,
+        }, status=200)
