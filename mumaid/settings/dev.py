@@ -7,7 +7,6 @@ ALLOWED_HOSTS = ["*"]
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-# Use Celery for async OTP email when developing with docker compose (worker + redis).
 EMAIL_USE_CELERY = True
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
