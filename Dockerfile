@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Build-time settings only (real secrets come from the host e.g. Render).
+# Build-time settings only .
 RUN SECRET_KEY=collectstatic-build-only-not-secret \
     DJANGO_ENV=dev \
     ALLOWED_HOSTS=localhost \
