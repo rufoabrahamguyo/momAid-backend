@@ -13,7 +13,10 @@ def generate_email_otp(email: str) -> str:
 
     cache.set(f"otp:{email}", otp, timeout=600)
 
-    send_otp_email.delay(email, otp)
+    if getattr(settings, "EMAIL_USE_CELERY", False):
+        send_otp_email.delay(email, otp)
+    else:
+        send_otp_email(email, otp)
 
     return otp
 

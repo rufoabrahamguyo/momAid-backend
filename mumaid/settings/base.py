@@ -199,6 +199,9 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
 
+# When True, OTP email is enqueued to Celery. When False, send in-process (no worker; typical for e.g. Render free tier).
+EMAIL_USE_CELERY = env.bool("EMAIL_USE_CELERY", default=False)
+
 CLIENT_GOOGLE_ID = env("CLIENT_GOOGLE_ID", default="")
 CLIENT_GOOGLE_SECRET = env("CLIENT_GOOGLE_SECRET", default="")
 CLIENT_GOOGLE_REDIRECT = env("CLIENT_GOOGLE_REDIRECT", default="")
