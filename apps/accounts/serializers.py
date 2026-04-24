@@ -20,6 +20,7 @@ class MotherProfileSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     mother_profile = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -30,9 +31,26 @@ class UserSerializer(serializers.ModelSerializer):
             "is_active",
             "joined_at",
             "updated_at",
+            "avatar",
             "mother_profile",
         ]
-        read_only_fields = ["id", "email", "role", "is_active", "joined_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "email",
+            "role",
+            "is_active",
+            "joined_at",
+            "updated_at",
+        ]
+
+    def get_avatar(self, obj):
+        if not obj.avatar:
+            return None
+        request = self.context.get("request")
+        url = obj.avatar.url
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url
 
     def get_mother_profile(self, obj):
         try:
@@ -49,16 +67,28 @@ class MotherProfilePatchSerializer(serializers.ModelSerializer):
 
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
-    """PATCH body: `{ "mother_profile": { ... } }` (mothers only)."""
+    """PATCH: nested `mother_profile` (mothers only) and/or `avatar` (multipart or JSON with null to clear)."""
 
     mother_profile = MotherProfilePatchSerializer(required=False, partial=True)
 
     class Meta:
         model = User
-        fields = ("mother_profile",)
+        fields = ("mother_profile", "avatar")
+        extra_kwargs = {
+            "avatar": {
+                "required": False,
+                "allow_null": True,
+            }
+        }
+
+    def validate_avatar(self, value):
+        if value and getattr(value, "size", 0) > 5 * 1024 * 1024:
+            raise serializers.ValidationError("Image must be 5MB or smaller.")
+        return value
 
     def update(self, instance, validated_data):
-        nested = validated_data.get("mother_profile")
+        nested = validated_data.pop("mother_profile", None)
+        instance = super().update(instance, validated_data)
         if nested is not None:
             if instance.role != User.Role.MOTHER:
                 raise serializers.ValidationError(

@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import status
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -43,9 +44,12 @@ class RegisterView(APIView):
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = [JSONParser, FormParser, MultiPartParser]
 
     def get(self, request):
-        return Response(UserSerializer(request.user).data)
+        return Response(
+            UserSerializer(request.user, context={"request": request}).data
+        )
 
     def patch(self, request):
         ser = UserProfileUpdateSerializer(
@@ -53,7 +57,9 @@ class UserProfileView(APIView):
         )
         ser.is_valid(raise_exception=True)
         ser.save()
-        return Response(UserSerializer(request.user).data)
+        return Response(
+            UserSerializer(request.user, context={"request": request}).data
+        )
 
 
 class LogoutView(APIView):
@@ -130,7 +136,7 @@ class CurrentUserView(APIView):
                 status=403,
             )
 
-        serializer = UserSerializer(user)
+        serializer = UserSerializer(user, context={"request": request})
 
         return Response(serializer.data, status=200)
 

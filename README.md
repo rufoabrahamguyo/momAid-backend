@@ -4,7 +4,7 @@ Welcome to the **momAid Backend API**.
 
 This document provides an overview of available endpoints and how to use them.
 
-**Frontend:** see **[What exists vs what the app still needs](docs/FRONTEND_INTEGRATION.md)** (API map + gaps: profile upload, FCM, therapist feed, contact preference on interest, etc.).
+**Frontend / mobile:** see **[Frontend integration: API map and gaps](docs/FRONTEND_INTEGRATION.md)** (auth profile, avatar upload, opportunities interest + contact preference; remaining gaps: FCM, feeds/video, etc.).
 
 ---
 
@@ -198,6 +198,7 @@ None (requires authentication)
   "is_active": true,
   "joined_at": "2026-04-22T21:59:12.707219Z",
   "updated_at": "2026-04-22T22:00:05.824922Z",
+  "avatar": "https://momaid-backend.onrender.com/media/avatars/2026/04/01/photo.png",
   "mother_profile": {
     "id": 6,
     "baby_due_date": null,
@@ -208,6 +209,8 @@ None (requires authentication)
   }
 }
 ```
+
+Use `"avatar": null` when the user has no profile photo. Same fields appear on **`GET api/auth/v1/profile/`** (and **`PATCH`** for updates: JSON for `mother_profile` and for clearing the photo, or `multipart/form-data` with an `avatar` file to upload). Details: [docs/FRONTEND_INTEGRATION.md](docs/FRONTEND_INTEGRATION.md).
 
 ---
 
@@ -232,3 +235,12 @@ Authorization: Bearer <access_token>
 
 ---
 
+# Tests (local, without Docker DB)
+
+```bash
+python manage.py test --settings=mumaid.settings.test
+```
+
+This uses SQLite in memory so PostgreSQL (e.g. `POSTGRES_HOST=db`) is not required.
+
+---

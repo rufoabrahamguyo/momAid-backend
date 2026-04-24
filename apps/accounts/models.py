@@ -44,6 +44,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
+    avatar = models.ImageField(
+        upload_to="avatars/%Y/%m/",
+        blank=True,
+        null=True,
+        help_text="Profile photo (mobile clients: PATCH profile as multipart/form-data with photo file).",
+    )
+
     joined_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -51,6 +58,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            previous = type(self).objects.filter(pk=self.pk).only("avatar").first()
+            if previous and previous.avatar:
+                if not self.avatar or (
+                    self.avatar and previous.avatar.name != self.avatar.name
+                ):
+                    previous.avatar.delete(save=False)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.email
