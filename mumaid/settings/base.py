@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import dj_database_url
 import environ
 from datetime import timedelta
 from urllib.parse import urlparse, urlunparse
@@ -70,11 +71,27 @@ ROOT_URLCONF = "mumaid.urls"
 WSGI_APPLICATION = "mumaid.wsgi.application"
 
 
-DATABASES = {
-    "default": env.db(
-        default="postgres://postgres:postgres@localhost:5432/mumaid"
-    )
-}
+ENVIRONMENT = os.getenv("ENVIRONMENT", "dev")
+
+if ENVIRONMENT == "prod":
+    DATABASES = {
+        "default": dj_database_url.config(
+            env="DATABASE_URL",
+            conn_max_age=600,
+            ssl_require=True,
+        )
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("POSTGRES_NAME") or os.getenv("POSTGRES_DB", "mumaid"),
+            "USER": os.getenv("POSTGRES_USER", "postgres"),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD", "postgres"),
+            "HOST": os.getenv("POSTGRES_HOST", "localhost"),
+            "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        }
+    }
 
 
 AUTH_USER_MODEL = "accounts.User"
