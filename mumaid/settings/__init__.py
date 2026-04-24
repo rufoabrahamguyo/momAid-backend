@@ -1,6 +1,6 @@
 import os
 
-ENVIRONMENT = os.getenv("DJANGO_ENV", "dev")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "dev")
 
 if ENVIRONMENT == "prod":
     from .prod import *
