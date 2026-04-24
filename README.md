@@ -4,7 +4,7 @@ Welcome to the **momAid Backend API**.
 
 This document provides an overview of available endpoints and how to use them.
 
-> ⚠️ Please read carefully before integrating.
+
 
 ---
 
@@ -232,6 +232,3 @@ Authorization: Bearer <access_token>
 
 ---
 
-# Author
-
-This API was created by **Rufo Abraham**.
