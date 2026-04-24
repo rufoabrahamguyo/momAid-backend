@@ -13,6 +13,7 @@ from apps.opportunities.models import Opportunity, OpportunityInterest
 class OpportunityInterestInline(admin.TabularInline):
     model = OpportunityInterest
     extra = 0
+    fields = ("user", "contact_preference", "created_at")
     readonly_fields = ("user", "created_at")
     can_delete = False
 

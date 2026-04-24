@@ -55,10 +55,14 @@ def send_opportunity_push_notification(opportunity_title: str) -> None:
 
 
 @shared_task
-def notify_admin_of_interest(opportunity_title: str, user_phone: str) -> None:
+def notify_admin_of_interest(
+    opportunity_title: str, user_contact: str, contact_preference: str = ""
+) -> None:
     """Notify admins about a new opportunity interest (email MVP)."""
     subject = f"MumAid: interest in {opportunity_title}"
-    message = f"User {user_phone} expressed interest in '{opportunity_title}'."
+    message = f"User {user_contact} expressed interest in '{opportunity_title}'."
+    if contact_preference:
+        message += f"\nContact preference: {contact_preference}."
     try:
         mail_admins(subject, message, fail_silently=False)
     except Exception:

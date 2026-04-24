@@ -51,5 +51,11 @@ class OpportunityInterestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OpportunityInterest
-        fields = ("id", "opportunity", "user", "created_at")
+        fields = (
+            "id",
+            "opportunity",
+            "user",
+            "contact_preference",
+            "created_at",
+        )
         read_only_fields = ("id", "opportunity", "user", "created_at")

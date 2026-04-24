@@ -1,7 +1,6 @@
-
-
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+
 from .models import MotherProfile, SupportContact
 
 User = get_user_model()
@@ -20,7 +19,7 @@ class MotherProfileSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    mother_profile = MotherProfileSerializer(read_only=True)
+    mother_profile = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -33,6 +32,43 @@ class UserSerializer(serializers.ModelSerializer):
             "updated_at",
             "mother_profile",
         ]
+        read_only_fields = ["id", "email", "role", "is_active", "joined_at", "updated_at"]
+
+    def get_mother_profile(self, obj):
+        try:
+            mp = obj.mother_profile
+        except MotherProfile.DoesNotExist:
+            return None
+        return MotherProfileSerializer(mp).data
+
+
+class MotherProfilePatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MotherProfile
+        fields = ("baby_due_date", "baby_birth_date", "push_notifications_enabled")
+
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    """PATCH body: `{ "mother_profile": { ... } }` (mothers only)."""
+
+    mother_profile = MotherProfilePatchSerializer(required=False, partial=True)
+
+    class Meta:
+        model = User
+        fields = ("mother_profile",)
+
+    def update(self, instance, validated_data):
+        nested = validated_data.get("mother_profile")
+        if nested is not None:
+            if instance.role != User.Role.MOTHER:
+                raise serializers.ValidationError(
+                    {"mother_profile": "Only the mother role has a mother_profile here."}
+                )
+            profile, _ = MotherProfile.objects.get_or_create(user=instance)
+            for k, v in nested.items():
+                setattr(profile, k, v)
+            profile.save()
+        return instance
 
 
 class RegisterSerializer(serializers.ModelSerializer):

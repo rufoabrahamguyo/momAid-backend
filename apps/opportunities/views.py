@@ -16,6 +16,7 @@ from apps.opportunities.serializers import (
     OpportunitySerializer,
     OpportunityWriteSerializer,
 )
+from apps.opportunities.utils import user_primary_contact_for_admin
 from apps.notifications.tasks import notify_admin_of_interest, send_opportunity_push_notification
 
 
@@ -33,12 +34,22 @@ class OpportunityViewSet(viewsets.ReadOnlyModelViewSet):
     def interest(self, request, pk=None) -> Response:
         opportunity = self.get_object()
         if request.method == "POST":
+            raw = (request.data or {}).get("contact_preference", "")
+            pref = (raw or "").strip()[:64] if isinstance(raw, str) else str(raw)[:64]
             obj, created = OpportunityInterest.objects.get_or_create(
                 opportunity=opportunity,
                 user=request.user,
+                defaults={"contact_preference": pref},
             )
+            if not created and pref and obj.contact_preference != pref:
+                obj.contact_preference = pref
+                obj.save(update_fields=["contact_preference"])
             if created:
-                notify_admin_of_interest.delay(opportunity.title, str(request.user.phone))
+                notify_admin_of_interest.delay(
+                    opportunity.title,
+                    user_primary_contact_for_admin(request.user),
+                    obj.contact_preference,
+                )
                 send_opportunity_push_notification.delay(opportunity.title)
             return Response({"detail": "Interest recorded."}, status=status.HTTP_200_OK)
         deleted, _ = OpportunityInterest.objects.filter(
@@ -77,9 +88,25 @@ class AdminOpportunityViewSet(viewsets.ModelViewSet):
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = f'attachment; filename="opportunity-{opportunity.id}-interests.csv"'
         writer = csv.writer(response)
-        writer.writerow(["opportunity_title", "user_phone", "user_email", "interested_at"])
+        writer.writerow(
+            [
+                "opportunity_title",
+                "user_contact",
+                "user_email",
+                "contact_preference",
+                "interested_at",
+            ]
+        )
         for row in opportunity.interests.select_related("user"):
             u = row.user
-            email = getattr(u, "ob_email", "") or ""
-            writer.writerow([opportunity.title, u.phone, email, row.created_at.isoformat()])
+            email = getattr(u, "ob_email", None) or getattr(u, "email", "") or ""
+            writer.writerow(
+                [
+                    opportunity.title,
+                    user_primary_contact_for_admin(u),
+                    email,
+                    row.contact_preference or "",
+                    row.created_at.isoformat(),
+                ]
+            )
         return response

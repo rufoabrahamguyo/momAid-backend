@@ -4,7 +4,7 @@ Welcome to the **momAid Backend API**.
 
 This document provides an overview of available endpoints and how to use them.
 
-
+**Frontend:** see **[What exists vs what the app still needs](docs/FRONTEND_INTEGRATION.md)** (API map + gaps: profile upload, FCM, therapist feed, contact preference on interest, etc.).
 
 ---
 

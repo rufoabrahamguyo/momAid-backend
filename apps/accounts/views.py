@@ -7,7 +7,12 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import RegisterSerializer, UserSerializer, LoginSerializer
+from .serializers import (
+    RegisterSerializer,
+    UserSerializer,
+    UserProfileUpdateSerializer,
+    LoginSerializer,
+)
 from .helpers import generate_email_otp, verify_email_otp,google_login, get_google_token, get_google_user_info
 
 User = get_user_model()
@@ -43,10 +48,12 @@ class UserProfileView(APIView):
         return Response(UserSerializer(request.user).data)
 
     def patch(self, request):
-        ser = UserSerializer(request.user, data=request.data, partial=True)
+        ser = UserProfileUpdateSerializer(
+            request.user, data=request.data, partial=True
+        )
         ser.is_valid(raise_exception=True)
         ser.save()
-        return Response(ser.data)
+        return Response(UserSerializer(request.user).data)
 
 
 class LogoutView(APIView):

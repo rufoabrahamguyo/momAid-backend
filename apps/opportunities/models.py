@@ -45,6 +45,12 @@ class OpportunityInterest(models.Model):
         related_name="interests",
     )
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    contact_preference = models.CharField(
+        max_length=64,
+        blank=True,
+        default="",
+        help_text="e.g. email, phone, app — how the user prefers follow-up.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
