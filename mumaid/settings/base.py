@@ -196,28 +196,7 @@ SIMPLE_JWT = {
     "CHECK_USER_IS_ACTIVE": True,
 }
 
-redis_url = env("REDIS_URL", default="redis://redis:6379/0")
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": _redis_url_with_db(redis_url, 1),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
-    },
-}
-
-CELERY_BROKER_URL = redis_url
-CELERY_RESULT_BACKEND = redis_url
-
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = "UTC"
-
-# When True, OTP email is enqueued to Celery. When False, send in-process (no worker; typical for e.g. Render free tier).
-EMAIL_USE_CELERY = env.bool("EMAIL_USE_CELERY", default=False)
 
 CLIENT_GOOGLE_ID = env("CLIENT_GOOGLE_ID", default="")
 CLIENT_GOOGLE_SECRET = env("CLIENT_GOOGLE_SECRET", default="")
