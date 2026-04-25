@@ -10,6 +10,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegisterSerializer, UserSerializer, LoginSerializer
 from .helpers import generate_email_otp, verify_email_otp,google_login, get_google_token, get_google_user_info
 
+import cloudinary.uploader
+
 User = get_user_model()
 
 
@@ -34,6 +36,40 @@ class RegisterView(APIView):
                 {"detail": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+class ImageProfileUploader(APIView):
+
+    def put(self, request):
+        MAX_SIZE = 10 * 1024 * 1024
+
+        profile_pic = request.FILES.get("profile_pic")
+
+        if not profile_pic:
+            return Response({"detail": "No image provided"}, status=400)
+
+        if profile_pic.size > MAX_SIZE:
+            return Response({"detail": "Image must be <= 10MB"}, status=400)
+
+        if not profile_pic.name.lower().endswith((".jpg", ".jpeg", ".png")):
+            return Response({"detail": "Only jpg, jpeg, png allowed"}, status=400)
+
+        user = request.user
+
+        result = cloudinary.uploader.upload(
+            profile_pic,
+            public_id=f"user_{user.id}",
+            overwrite=True
+        )
+
+        user.image = result["public_id"]
+        user.save()
+
+        return Response({
+            "detail": "Profile image updated",
+            "url": result["secure_url"]
+        }, status=200)
+
+
 
 
 class UserProfileView(APIView):

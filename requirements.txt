@@ -1,21 +1,37 @@
-# MumAid backend — Django 5 + DRF
+# Django core
 Django>=5.0,<6.0
 djangorestframework>=3.14,<4.0
+django-filter>=24.0
+
+# DB
 psycopg2-binary>=2.9.9
-django-environ>=0.11.2
-redis>=5.0.0
+dj_database_url>=3.1.2
+
+# Auth
+djangorestframework-simplejwt>=5.5.1
+
+# Async / background tasks
 celery>=5.3.0
 django-celery-beat>=2.5.0
-django-cors-headers>=4.3.0
-django-storages>=1.14.0
-drf-spectacular>=0.27.0
-django-filter>=24.0
-django-ratelimit>=4.1.0
-Pillow>=10.2.0
-gunicorn>=21.2.0
-djangorestframework-simplejwt>=5.5.1
+redis>=5.0.0
 django-redis>=5.4.0
+
+# API docs
+drf-spectacular>=0.27.0
+
+# Media / files
+cloudinary>=1.36.0
+django-cloudinary-storage>=0.3.0
+Pillow>=10.2.0
+
+# Security / utils
+django-cors-headers>=4.3.0
+django-ratelimit>=4.1.0
 requests>=2.33.1
+
+# Deployment
+gunicorn>=21.2.0
 whitenoise>=6.7.0
-dj_database_url>=3.1.2
-upstash-redis
+
+# Env config
+django-environ>=0.11.2

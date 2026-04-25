@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 import uuid
 from django.db import models
+from cloudinary.models import CloudinaryField
 
 
 class UserManager(BaseUserManager):
@@ -31,6 +32,8 @@ class UserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
+
+
 class User(AbstractBaseUser, PermissionsMixin):
     class Role(models.TextChoices):
         MOTHER = "mother", "Mother"
@@ -43,6 +46,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    image = CloudinaryField(null=True, blank=True)
 
     joined_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
