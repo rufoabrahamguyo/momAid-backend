@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "apps.partner",
     "apps.healthcare",
     "apps.notifications",
+    "apps.feeds",
 ]
 
 MIDDLEWARE = [
