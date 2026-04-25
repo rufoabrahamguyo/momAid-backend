@@ -5,7 +5,8 @@ from .views import (
     VerifyTokenView, 
     CurrentUserView, 
     GoogleLoginView, 
-    GoogleCallbackView
+    GoogleCallbackView,
+    ImageProfileUploader
     )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -21,4 +22,5 @@ urlpatterns = [
     path('v1/whoami/', CurrentUserView.as_view(),name="who-am-i"),
     path("v1/google/login/", GoogleLoginView.as_view(), name="google-login"),
     path("v1/google/callback/", GoogleCallbackView.as_view(), name="google-callback"),
+    path("profile/image/", ImageProfileUploader.as_view(), name="profile-image"),
 ]

@@ -1,37 +1,33 @@
+## Updated Django Settings
+
 from pathlib import Path
 import os
 import dj_database_url
 import environ
 from datetime import timedelta
-from urllib.parse import urlparse, urlunparse
-
-
-def _redis_url_with_db(url: str, db: int) -> str:
-    parsed = urlparse(url)
-    return urlunparse((parsed.scheme, parsed.netloc, f"/{db}", "", "", ""))
-
+import cloudinary
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
 
 env = environ.Env()
 environ.Env.read_env(BASE_DIR / ".env")
 
-SECRET_KEY = env("SECRET_KEY")
+SECRET_KEY = env("SECRET_KEY", default="django-insecure-default-key-change-me")
+
+if not SECRET_KEY:
+    raise Exception("SECRET_KEY not set")
+
 DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
-
-DJANGO_APPS = [
+INSTALLED_APPS = [
+    "cloudinary_storage",
+    "django.contrib.staticfiles",
+    "cloudinary",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "django.contrib.staticfiles",
-]
-
-THIRD_PARTY_APPS = [
     "rest_framework",
     "corsheaders",
     "drf_spectacular",
@@ -39,9 +35,6 @@ THIRD_PARTY_APPS = [
     "django_celery_beat",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
-]
-
-LOCAL_APPS = [
     "apps.accounts",
     "apps.opportunities",
     "apps.remedies",
@@ -52,12 +45,9 @@ LOCAL_APPS = [
     "apps.notifications",
 ]
 
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
-
-
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware", 
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -70,7 +60,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = "mumaid.urls"
 WSGI_APPLICATION = "mumaid.wsgi.application"
 
-
+# --- Database ---
 ENVIRONMENT = os.getenv("ENVIRONMENT", "dev")
 
 if ENVIRONMENT == "prod":
@@ -93,9 +83,8 @@ else:
         }
     }
 
-
+# --- Auth & Internationalization ---
 AUTH_USER_MODEL = "accounts.User"
-
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
 ]
@@ -105,25 +94,34 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-
+# --- Static & Media Files (Django 4.2+ / 5.x Style) ---
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# This handles both WhiteNoise for static and Cloudinary for media
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+# --- Cloudinary Config ---
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": env("CLOUDINARY_CLOUD_NAME"),
+    "API_KEY": env("CLOUDINARY_CLOUD_API_KEY"),
+    "API_SECRET": env("CLOUDINARY_CLOUD_API_SECRET"),
+}
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+cloudinary.config(
+    cloud_name=CLOUDINARY_STORAGE["CLOUD_NAME"],
+    api_key=CLOUDINARY_STORAGE["API_KEY"],
+    api_secret=CLOUDINARY_STORAGE["API_SECRET"],
+)
 
-
+# --- REST Framework & JWT ---
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -132,6 +130,15 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=120),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "SIGNING_KEY": SECRET_KEY,
 }
 
 TEMPLATES = [
@@ -150,56 +157,9 @@ TEMPLATES = [
     },
 ]
 
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=120),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    "ROTATE_REFRESH_TOKENS": False,
-    "BLACKLIST_AFTER_ROTATION": False,
-    "UPDATE_LAST_LOGIN": False,
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-    "ALGORITHM": "HS256",
-    "SIGNING_KEY": SECRET_KEY,
-    "VERIFYING_KEY": "",
-    "AUDIENCE": None,
-    "ISSUER": None,
-    "JSON_ENCODER": None,
-    "JWK_URL": None,
-    "LEEWAY": 0,
-
-    "AUTH_HEADER_TYPES": ("Bearer",),
-    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
-    "USER_ID_FIELD": "id",
-    "USER_ID_CLAIM": "user_id",
-    "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
-    "ON_LOGIN_SUCCESS": "rest_framework_simplejwt.serializers.default_on_login_success",
-    "ON_LOGIN_FAILED": "rest_framework_simplejwt.serializers.default_on_login_failed",
-
-    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
-    "TOKEN_TYPE_CLAIM": "token_type",
-    "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
-
-    "JTI_CLAIM": "jti",
-
-    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
-    "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
-    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
-
-    "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainPairSerializer",
-    "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
-    "TOKEN_VERIFY_SERIALIZER": "rest_framework_simplejwt.serializers.TokenVerifySerializer",
-    "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
-    "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
-    "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
-
-    "CHECK_REVOKE_TOKEN": False,
-    "REVOKE_TOKEN_CLAIM": "hash_password",
-    "CHECK_USER_IS_ACTIVE": True,
-}
-
-
-
+# Google Auth
 CLIENT_GOOGLE_ID = env("CLIENT_GOOGLE_ID", default="")
 CLIENT_GOOGLE_SECRET = env("CLIENT_GOOGLE_SECRET", default="")
 CLIENT_GOOGLE_REDIRECT = env("CLIENT_GOOGLE_REDIRECT", default="")
-
-
