@@ -4,8 +4,6 @@ Welcome to the **momAid Backend API**.
 
 This document provides an overview of available endpoints and how to use them.
 
-
-
 ---
 
 ## Base URL
@@ -13,7 +11,6 @@ This document provides an overview of available endpoints and how to use them.
 ```
 development: http://localhost:8000/
 production: https://momaid-backend.onrender.com/
-
 ```
 
 ---
@@ -113,40 +110,21 @@ POST api/auth/v1/login/
 
 ---
 
-## 4. Google Login (OAuth2)
+## 4. Refresh Token
 
-momAid supports **Google Sign-In** for authentication.
-
-### Endpoint
+**Endpoint:**
 
 ```
-POST api/auth/v1/google/login/
+POST api/auth/v1/login/refresh/token/
 ```
 
 ### Request Body
 
 ```json
-none
-```
-
-### Response
-
-```json
 {
-  "access": "jwt_access_token_here",
-  "refresh": "jwt_refresh_token_here",
-  "email": "user@gmail.com",
-  "is_new_user": true
+  "refresh": "refresh_token_here"
 }
 ```
-
-### Flow Summary
-
-1. User signs in with Google on frontend
-2. Frontend receives Google ID token
-3. Send token to backend
-4. Backend verifies token and returns JWT
-5. User is authenticated
 
 ---
 
@@ -166,17 +144,21 @@ POST api/auth/v1/logout/
 }
 ```
 
-### Response
+### Responses
+
+```json
+205 Reset Content
+```
 
 ```json
 {
-  "status": 205
+  "detail": "Refresh token required"
 }
 ```
 
 ---
 
-## 6. Get Current User (Who Am I)
+## 6. Get Current User
 
 **Endpoint:**
 
@@ -184,36 +166,197 @@ POST api/auth/v1/logout/
 GET api/auth/v1/whoami/
 ```
 
-### Request
-
-None (requires authentication)
-
-### Response
+### Response (example)
 
 ```json
 {
-  "id": "dfbe66d7-44c7-451a-9e27-a9c538f2b82f",
+  "id": "uuid",
   "email": "user@example.com",
   "role": "mother",
-  "is_active": true,
-  "joined_at": "2026-04-22T21:59:12.707219Z",
-  "updated_at": "2026-04-22T22:00:05.824922Z",
-  "mother_profile": {
-    "id": 6,
-    "baby_due_date": null,
-    "baby_birth_date": null,
-    "push_notifications_enabled": true,
-    "user": "dfbe66d7-44c7-451a-9e27-a9c538f2b82f",
-    "partner": null
-  }
+  "is_active": true
 }
 ```
 
 ---
 
-# Authentication Header
+## 7. Upload Profile Image
 
-For protected routes:
+**Endpoint:**
+
+```
+PUT api/auth/v1/profile/image/
+```
+
+### Headers
+
+```
+Authorization: Bearer <access_token>
+Content-Type: multipart/form-data
+```
+
+### Request Body (form-data)
+
+```
+profile_pic: <image_file>
+```
+
+### Validation Rules
+
+* Max size: 10MB
+* Allowed formats: jpg, jpeg, png
+
+### Success Response
+
+```json
+{
+  "detail": "Profile image updated",
+  "url": "https://res.cloudinary.com/..."
+}
+```
+
+### Error Responses
+
+```json
+{
+  "detail": "No image provided"
+}
+```
+
+```json
+{
+  "detail": "Image must be <= 10MB"
+}
+```
+
+```json
+{
+  "detail": "Only jpg, jpeg, png allowed"
+}
+```
+
+---
+
+# Feeds & Video Features (NEW)
+
+## 8. Upload User Video
+
+**Endpoint:**
+
+```
+POST api/feeds/v1/upload/video/
+```
+
+### Headers
+
+```
+Authorization: Bearer <access_token>
+Content-Type: multipart/form-data
+```
+
+### Request Body (form-data)
+
+```
+video_file_path: <video_file>
+attributes[title]: "My video title"
+attributes[description]: "Optional description"
+```
+
+### Notes
+
+* Video is uploaded to Cloudinary
+* Duration and size are auto-extracted
+
+### Success Response
+
+```json
+{
+  "detail": "Video uploaded successfully",
+  "data": {
+    "id": 1,
+    "video_file": "https://res.cloudinary.com/...",
+    "user": "user_id",
+    "attributes": {
+      "id": 10,
+      "title": "My video title",
+      "description": "Optional description",
+      "duration": 12.5,
+      "size": 1048576,
+      "created_at": "2026-04-26T...",
+      "updated_at": "2026-04-26T..."
+    }
+  }
+}
+```
+
+### Error Response
+
+```json
+{
+  "error": "Upload failed"
+}
+```
+
+---
+
+## 9. Get All Videos (Feed)
+
+**Endpoint:**
+
+```
+GET api/feeds/v1/videos/all/
+```
+
+### Response
+
+```json
+[
+  {
+    "id": 1,
+    "video_file": "https://...",
+    "user": "user_id",
+    "attributes": {
+      "title": "...",
+      "description": "...",
+      "duration": 10,
+      "size": 12345,
+      "created_at": "..."
+    }
+  }
+]
+```
+
+---
+
+## 10. Get User Specific Videos
+
+**Endpoint:**
+
+```
+GET api/feeds/v1/user/specific/videos/
+```
+
+### Response
+
+```json
+[
+  {
+    "id": 1,
+    "video_file": "https://...",
+    "user": "user_id",
+    "attributes": {
+      "title": "...",
+      "description": "...",
+      "duration": 10,
+      "size": 12345,
+      "created_at": "..."
+    }
+  }
+]
+```
+
+---
+
+# Authentication Header
 
 ```
 Authorization: Bearer <access_token>
@@ -225,10 +368,30 @@ Authorization: Bearer <access_token>
 
 * `200` → Success
 * `201` → Created
-* `205` → Reset/Logout success
+* `205` → Logout success
 * `400` → Bad request
 * `401` → Unauthorized
 * `403` → Forbidden
 
 ---
 
+# API Modules Overview
+
+* Authentication → `/api/auth/`
+* Feeds (Videos) → `/api/feeds/`
+* Opportunities → `/api/opportunities/`
+* Remedies → `/api/remedies/`
+* Exercises → `/api/exercises/`
+* Milk Support → `/api/milk/`
+* Partner → `/api/partner/`
+* Healthcare → `/api/healthcare/`
+
+---
+
+# API Docs
+
+Swagger UI available at:
+
+```
+/api/docs/
+```
