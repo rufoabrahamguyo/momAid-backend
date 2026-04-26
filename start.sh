@@ -1,11 +1,13 @@
 #!/bin/sh
 
 
-
 echo "Starting Django..."
 
-gunicorn mumaid.wsgi:application --bind 0.0.0.0:8000 &
+echo "Applying database migrations..."
+python manage.py migrate --noinput
 
+
+gunicorn mumaid.wsgi:application --bind 0.0.0.0:8000 &
 
 
 echo "Starting Celery..."
