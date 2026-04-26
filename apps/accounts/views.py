@@ -14,6 +14,10 @@ import cloudinary.uploader
 
 User = get_user_model()
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -187,23 +191,37 @@ class GoogleCallbackView(APIView):
         code = request.GET.get("code")
 
         if not code:
+            logger.warning("Google login attempt failed: No code provided in request.")
             return Response({"error": "No code provided"}, status=400)
 
-        access_token = get_google_token(code)
-        user_data = get_google_user_info(access_token)
+        try:
+            access_token = get_google_token(code)
+            
+            user_data = get_google_user_info(access_token)
+            email = user_data.get("email")
 
-        email = user_data["email"]
+            if not email:
+                logger.error(f"Google user_data missing email: {user_data}")
+                return Response({"error": "Email not provided by Google"}, status=400)
 
-        user, created = User.objects.get_or_create(email=email)
+            user, created = User.objects.get_or_create(email=email)
+            
+            user.is_active = True
+            user.role = "mother"
+            user.save(update_fields=["is_active", "role"])
 
-        user.is_active = True
-        user.role = "mother"
-        user.save(update_fields=["is_active", "role"])
+       
+            refresh = RefreshToken.for_user(user)
 
-        refresh = RefreshToken.for_user(user)
+            logger.info(f"Successfully authenticated user: {email}")
 
-        return Response({
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-            "email": email,
-        }, status=200)
+            return Response({
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "email": email,
+            }, status=200)
+
+        except Exception as e:
+
+            logger.exception(f"Production error during Google Callback: {str(e)}")
+            return Response({"error": "Internal server error during authentication"}, status=500)
