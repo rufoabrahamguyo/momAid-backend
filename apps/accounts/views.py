@@ -190,18 +190,15 @@ class GoogleCallbackView(APIView):
             return Response({"error": "No code provided"}, status=400)
 
         access_token = get_google_token(code)
-
         user_data = get_google_user_info(access_token)
 
         email = user_data["email"]
 
-        user, created = User.objects.get_or_create(
-            email=email,
-            defaults={
-                "is_active": True,
-                "role": "mother",
-            }
-        )
+        user, created = User.objects.get_or_create(email=email)
+
+        user.is_active = True
+        user.role = "mother"
+        user.save(update_fields=["is_active", "role"])
 
         refresh = RefreshToken.for_user(user)
 
@@ -210,3 +207,5 @@ class GoogleCallbackView(APIView):
             "refresh": str(refresh),
             "email": email,
         }, status=200)
+
+        
