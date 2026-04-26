@@ -4,8 +4,9 @@ from rest_framework.views import APIView
 from rest_framework import status
 import cloudinary.uploader
 
-from .serializers import VideoSerializer
-from .models import Video
+from .serializers import VideoSerializer,CommentSerializer, CommentListSerializer
+from .models import Video, Comment
+from django.shortcuts import get_object_or_404
 
 class UploadUserVideoView(APIView):
     permission_classes = [IsAuthenticated]
@@ -80,7 +81,68 @@ class GetAllVideosView(APIView):
             
 
     
+class CreateVideoCommentView(APIView):
 
+
+    def post(self, request, video_id):
+        user = request.user
+
+        video = get_object_or_404(Video, id=video_id)
+
+        serializer = CommentSerializer(data=request.data)
+
+        if serializer.is_valid():
+            comment = serializer.save(user=user, video=video)
+
+            return Response({
+                "comment": comment.content,
+                "posted_at": comment.created_at
+            }, status=201)
+
+        return Response(serializer.errors, status=400)
+
+
+class ReplyCommentView(APIView):
+
+    def post(self, request, comment_id):
+
+        parent_comment = get_object_or_404(Comment, id=comment_id)
+
+        if parent_comment.parent is not None:
+            return Response(
+                {"detail": "Only 1 level replies allowed"},
+                status=400
+            )
+
+        serializer = CommentSerializer(data=request.data)
+
+        if serializer.is_valid():
+            comment = serializer.save(
+                user=request.user,
+                video=parent_comment.video,
+                parent=parent_comment
+            )
+
+            return Response({
+                "comment": comment.content,
+                "posted_at": comment.created_at
+            }, status=201)
+
+        return Response(serializer.errors, status=400)
 
         
 
+class ListVideoCommentsView(APIView):
+
+    def get(self, request, video_id):
+
+        video = get_object_or_404(Video, id=video_id)
+
+        comments = Comment.objects.filter(
+            video=video,
+            parent__isnull=True
+        ).prefetch_related("replies", "replies__user")
+
+        serializer = CommentListSerializer(comments, many=True)
+
+        return Response(serializer.data, status=200)

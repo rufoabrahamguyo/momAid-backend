@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import VideoAttributes, Video
-import os
+from .models import VideoAttributes, Video, Comment
 
 
 class VideoAttributesSerializer(serializers.ModelSerializer):
@@ -16,7 +15,6 @@ class VideoAttributesSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-
         read_only_fields = [
             "id",
             "duration",
@@ -36,25 +34,46 @@ class VideoSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "user", "video_file"]
 
     def create(self, validated_data):
-        # 1. Pop out the 'temporary' file path so we don't try to save it to the DB
         validated_data.pop('video_file_path', None)
 
-        # 2. Extract the nested attribute dictionary (now includes duration/size from View)
         attr_data = validated_data.pop('attributes')
-        
-        # 3. Extract the user and the cloudinary URL
         user = validated_data.pop('user')
         video_url = validated_data.pop('video_file')
 
-        # 4. Create the Attributes record first
-        # This works because attr_data is a dict: {'title': '...', 'duration': 10, ...}
         attribute_instance = VideoAttributes.objects.create(**attr_data)
 
-        # 5. Create the Video record and link the Attribute instance
         video = Video.objects.create(
             user=user,
             video_file=video_url,
             attributes=attribute_instance
         )
-        
+
         return video
+
+
+class CommentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Comment
+        fields = ["id", "content", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+
+class ReplySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Comment
+        fields = ["id", "content", "created_at"]
+
+
+class CommentListSerializer(serializers.ModelSerializer):
+    replies = ReplySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = [
+            "id",
+            "content",
+            "created_at",
+            "replies"
+        ]
