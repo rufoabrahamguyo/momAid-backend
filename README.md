@@ -354,6 +354,88 @@ GET api/feeds/v1/user/specific/videos/
 ]
 ```
 
+# 💬 COMMENT SYSTEM
+
+The system supports:
+
+* Comments on videos
+* 1-level replies only
+* Backend-controlled user assignment
+* Nested comment retrieval
+
+---
+
+## Comment Model Rules
+
+* user is set by backend (`request.user`)
+* video is set via URL
+* replies only allowed one level deep
+* no self-assigned user or video from frontend
+
+---
+
+## Create Comment
+
+```
+POST api/feeds/v1/videos/<video_id>/comments/create/
+```
+
+### Body
+
+```json
+{
+  "content": "Nice video!"
+}
+```
+
+---
+
+## Get Video Comments
+
+```
+GET api/feeds/v1/videos/<video_id>/comments/
+```
+
+### Response
+
+```json
+[
+  {
+    "id": 1,
+    "content": "Nice video",
+    "created_at": "...",
+    "replies": [
+      {
+        "id": 2,
+        "content": "I agree",
+        "created_at": "..."
+      }
+    ]
+  }
+]
+```
+
+---
+
+## Reply to Comment
+
+```
+POST api/feeds/v1/comments/<comment_id>/reply/
+```
+
+### Body
+
+```json
+{
+  "content": "Reply message"
+}
+```
+
+### Rules
+
+* Only 1-level replies allowed
+* Replies to replies are blocked
+
 ---
 
 # Authentication Header
@@ -363,6 +445,7 @@ Authorization: Bearer <access_token>
 ```
 
 ---
+
 
 # Status Codes
 
