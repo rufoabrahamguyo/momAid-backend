@@ -122,7 +122,6 @@ cloudinary.config(
     api_secret=CLOUDINARY_STORAGE["API_SECRET"],
 )
 
-# --- REST Framework & JWT ---
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -131,6 +130,9 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ]
 }
 
 SIMPLE_JWT = {
