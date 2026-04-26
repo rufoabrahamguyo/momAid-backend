@@ -207,5 +207,3 @@ class GoogleCallbackView(APIView):
             "refresh": str(refresh),
             "email": email,
         }, status=200)
-
-        
