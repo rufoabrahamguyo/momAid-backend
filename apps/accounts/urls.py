@@ -4,9 +4,8 @@ from .views import (
     LogoutView, 
     VerifyTokenView, 
     CurrentUserView, 
-    GoogleLoginView, 
-    GoogleCallbackView,
-    ImageProfileUploader
+    ImageProfileUploader,
+    GoogleSocialLoginView,
     )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -20,7 +19,6 @@ urlpatterns = [
     path("v1/logout/", LogoutView.as_view(), name="logout-user"),
     path("v1/verify/token/", VerifyTokenView.as_view(), name="verify-otp-user"),
     path('v1/whoami/', CurrentUserView.as_view(),name="who-am-i"),
-    path("v1/google/login/", GoogleLoginView.as_view(), name="google-login"),
-    path("v1/google/callback/", GoogleCallbackView.as_view(), name="google-callback"),
+    path("v1/google/social-login/", GoogleSocialLoginView.as_view(), name="google-social-login"),
     path("v1/profile/image/", ImageProfileUploader.as_view(), name="profile-image"),
 ]
