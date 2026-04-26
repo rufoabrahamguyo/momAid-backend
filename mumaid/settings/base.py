@@ -164,3 +164,27 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CLIENT_GOOGLE_ID = env("CLIENT_GOOGLE_ID", default="")
 CLIENT_GOOGLE_SECRET = env("CLIENT_GOOGLE_SECRET", default="")
 CLIENT_GOOGLE_REDIRECT = env("CLIENT_GOOGLE_REDIRECT", default="")
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        '': { 
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+    },
+}
