@@ -138,9 +138,16 @@ class VerifyTokenView(APIView):
                 user.is_active = True
                 user.save()
 
+                refresh = RefreshToken.for_user(user)
+
                 return Response(
-                    {"detail": "Email verified successfully"},
-                    status=200
+                    {
+                        "detail": "Email verified successfully",
+                        "access": str(refresh.access_token),
+                        "refresh": str(refresh),
+                        "email": user.email,
+                    },
+                    status=200,
                 )
 
             return Response(
