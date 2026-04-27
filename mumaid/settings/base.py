@@ -1,23 +1,17 @@
-## Updated Django Settings
-
 from pathlib import Path
 import os
-import dj_database_url
 import environ
 from datetime import timedelta
 import cloudinary
 
+# Adjusted to point to project root from settings/base.py
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env()
-environ.Env.read_env(BASE_DIR / ".env")
+# Only read .env here if it exists, otherwise environment variables handle it
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 SECRET_KEY = env("SECRET_KEY", default="django-insecure-default-key-change-me")
-
-if not SECRET_KEY:
-    raise Exception("SECRET_KEY not set")
-
-DEBUG = env.bool("DEBUG", default=False)
 
 INSTALLED_APPS = [
     "cloudinary_storage",
@@ -61,30 +55,6 @@ MIDDLEWARE = [
 ROOT_URLCONF = "mumaid.urls"
 WSGI_APPLICATION = "mumaid.wsgi.application"
 
-# --- Database ---
-ENVIRONMENT = os.getenv("ENVIRONMENT", "dev")
-
-if ENVIRONMENT == "prod":
-    DATABASES = {
-        "default": dj_database_url.config(
-            env="DATABASE_URL",
-            conn_max_age=600,
-            ssl_require=True,
-        )
-    }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("POSTGRES_NAME") or os.getenv("POSTGRES_DB", "mumaid"),
-            "USER": os.getenv("POSTGRES_USER", "postgres"),
-            "PASSWORD": os.getenv("POSTGRES_PASSWORD", "postgres"),
-            "HOST": os.getenv("POSTGRES_HOST", "localhost"),
-            "PORT": os.getenv("POSTGRES_PORT", "5432"),
-        }
-    }
-
-# --- Auth & Internationalization ---
 AUTH_USER_MODEL = "accounts.User"
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -95,11 +65,9 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# --- Static & Media Files (Django 4.2+ / 5.x Style) ---
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# This handles both WhiteNoise for static and Cloudinary for media
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
@@ -109,11 +77,10 @@ STORAGES = {
     },
 }
 
-# --- Cloudinary Config ---
 CLOUDINARY_STORAGE = {
-    "CLOUD_NAME": env("CLOUDINARY_CLOUD_NAME"),
-    "API_KEY": env("CLOUDINARY_CLOUD_API_KEY"),
-    "API_SECRET": env("CLOUDINARY_CLOUD_API_SECRET"),
+    "CLOUD_NAME": env("CLOUDINARY_CLOUD_NAME", default=""),
+    "API_KEY": env("CLOUDINARY_CLOUD_API_KEY", default=""),
+    "API_SECRET": env("CLOUDINARY_CLOUD_API_SECRET", default=""),
 }
 
 cloudinary.config(
@@ -123,16 +90,10 @@ cloudinary.config(
 )
 
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
-    ],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ],
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-    ]
+    "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
+    'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer']
 }
 
 SIMPLE_JWT = {
@@ -162,31 +123,16 @@ TEMPLATES = [
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Google Auth
-CLIENT_GOOGLE_ID = env("CLIENT_GOOGLE_ID", default="")
-CLIENT_GOOGLE_SECRET = env("CLIENT_GOOGLE_SECRET", default="")
-CLIENT_GOOGLE_REDIRECT = env("CLIENT_GOOGLE_REDIRECT", default="")
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
+        'verbose': {'format': '{levelname} {asctime} {module} {message}', 'style': '{'},
     },
     'handlers': {
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
+        'console': {'level': 'INFO', 'class': 'logging.StreamHandler', 'formatter': 'verbose'},
     },
     'loggers': {
-        '': { 
-            'handlers': ['console'],
-            'level': 'INFO',
-        },
+        '': {'handlers': ['console'], 'level': 'INFO'},
     },
 }
