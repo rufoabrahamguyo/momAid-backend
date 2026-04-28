@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.accounts.models import MotherProfile
 from apps.partner.models import PartnerTask, PartnerTaskCompletion
 from apps.partner.permissions import IsPartner
 from apps.partner.serializers import (
@@ -16,8 +16,6 @@ from apps.partner.serializers import (
     PartnerTaskCompletionSerializer,
     PartnerTaskSerializer,
 )
-
-User = get_user_model()
 
 
 class PartnerConnectView(APIView):
@@ -27,10 +25,13 @@ class PartnerConnectView(APIView):
         ser = ConnectSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
         code = ser.validated_data["unique_code"].strip()
-        mother = get_object_or_404(User, unique_code=code, role=User.Role.MOTHER)
-        mother.partner = request.user
-        mother.save()
-        return Response({"detail": "Connected.", "mother_id": mother.id}, status=status.HTTP_200_OK)
+        mother_profile = get_object_or_404(MotherProfile, unique_code=code)
+        mother_profile.partner = request.user
+        mother_profile.save(update_fields=["partner"])
+        return Response(
+            {"detail": "Connected.", "mother_id": str(mother_profile.user_id)},
+            status=status.HTTP_200_OK,
+        )
 
 
 class PartnerTaskListView(generics.ListAPIView):
