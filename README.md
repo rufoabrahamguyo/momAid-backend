@@ -233,6 +233,7 @@ profile_pic: <image_file>
   "detail": "Only jpg, jpeg, png allowed"
 }
 ```
+---
 
 ## 8. Login User Via Google
 
@@ -262,7 +263,7 @@ POST api/auth/v1/google/social-login/
 
 # Feeds & Video Features (NEW)
 
-## 8. Upload User Video
+## 9. Upload User Video
 
 **Endpoint:**
 
@@ -322,7 +323,7 @@ attributes[description]: "Optional description"
 
 ---
 
-## 9. Get All Videos (Feed)
+## 10. Get All Videos (Feed)
 
 **Endpoint:**
 
@@ -351,7 +352,7 @@ GET api/feeds/v1/videos/all/
 
 ---
 
-## 10. Get User Specific Videos
+## 11. Get User Specific Videos
 
 **Endpoint:**
 
