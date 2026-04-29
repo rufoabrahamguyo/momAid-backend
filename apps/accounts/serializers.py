@@ -1,26 +1,28 @@
-
-
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import MotherProfile, SupportContact
+from .models import MotherProfile, PartnerProfile, SupportContact
 
 User = get_user_model()
-
 
 class SupportContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupportContact
         fields = "__all__"
 
-
 class MotherProfileSerializer(serializers.ModelSerializer):
+    support_contacts = SupportContactSerializer(many=True, read_only=True)
+    
     class Meta:
         model = MotherProfile
-        fields = "__all__"
+        fields = ["baby_due_date", "baby_birth_date", "partner", "support_contacts"]
 
+class PartnerProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PartnerProfile
+        fields = ["id", "user"]
 
 class UserSerializer(serializers.ModelSerializer):
-    mother_profile = MotherProfileSerializer(read_only=True)
+    profile = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -31,8 +33,17 @@ class UserSerializer(serializers.ModelSerializer):
             "is_active",
             "joined_at",
             "updated_at",
-            "mother_profile",
+            "profile", 
         ]
+
+    def get_profile(self, obj):
+        if obj.role == 'mother':
+            profile = getattr(obj, 'mother_profile', None)
+            return MotherProfileSerializer(profile).data if profile else None
+        elif obj.role == 'partner':
+            profile = getattr(obj, 'partner_profile', None)
+            return PartnerProfileSerializer(profile).data if profile else None
+        return None
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -43,26 +54,16 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop("password", None)
+        role = validated_data.get("role")
         user = User.objects.create_user(password=password, **validated_data)
 
-        if user.role == User.Role.MOTHER:
+
+        if role == 'mother':
             MotherProfile.objects.create(user=user)
+        elif role == 'partner':
+            PartnerProfile.objects.create(user=user)
+            
+
 
         return user
 
-
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField()
-
-    def validate(self, attrs):
-        email = attrs.get("email")
-        password = attrs.get("password")
-
-        user = User.objects.filter(email=email).first()
-
-        if not user or not user.check_password(password):
-            raise serializers.ValidationError("Invalid credentials")
-
-        attrs["user"] = user
-        return attrs
