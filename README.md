@@ -234,6 +234,30 @@ profile_pic: <image_file>
 }
 ```
 
+## 8. Login User Via Google
+
+**Endpoint:**
+
+```
+POST api/auth/v1/google/social-login/
+```
+
+### Request Body
+
+```json
+{
+  "token": "ID_TOKEN_FROM_FRONTEND"
+}
+```
+
+### Response
+
+```json
+{
+  "access": "access_token_here",
+  "refresh": "refresh_token_here"
+}
+```
 ---
 
 # Feeds & Video Features (NEW)

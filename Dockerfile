@@ -1,22 +1,36 @@
-# Base image
-FROM python:3.12-slim AS base
+# Stage 1: Build stage
+FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Create venv and install requirements
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Stage 2: Final Run stage
+FROM python:3.12-slim
 
-# RUN SECRET_KEY=collectstatic-build-only-not-secret \
-#     DJANGO_ENV=dev \
-#     ALLOWED_HOSTS=localhost \
-#     python manage.py collectstatic --noinput
+WORKDIR /app
+
+# Install ONLY the runtime libraries (e.g., libpq for Postgres)
+RUN apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*
+
+# Copy the venv from the builder stage
+COPY --from=builder /opt/venv /opt/venv
+
+# Ensure the venv is used
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy application code
+COPY . .
 
 CMD ["sh", "start.sh"]
