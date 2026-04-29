@@ -14,7 +14,8 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+RUN pip install --default-timeout=100 --no-cache-dir -r requirements.txt
 
 # Stage 2: Final Run stage
 FROM python:3.12-slim
