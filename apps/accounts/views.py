@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import RegisterSerializer, UserSerializer, LoginSerializer
+from .serializers import RegisterSerializer, UserSerializer
 from .helpers import generate_email_otp, verify_email_otp, verify_google_token
 
 User = get_user_model()
