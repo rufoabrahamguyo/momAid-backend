@@ -1,315 +1,96 @@
-# momAid Backend API
+# MumAid API
 
-Welcome to the **momAid Backend API**.
+MumAid API is a modular, scalable RESTful backend designed to support maternal healthcare services and related wellness needs. It provides a centralized platform for managing user accounts, healthcare resources, maternal support tools, and community-driven content.
 
-This document provides an overview of available endpoints and how to use them.
-
----
-
-## Base URL
-
-```
-development: http://localhost:8000/
-production: https://momaid-backend.onrender.com/
-```
+The API is structured into independent modules (apps), each responsible for a specific domain such as authentication, healthcare services, nutrition, and support systems. This modular architecture ensures maintainability, scalability, and ease of extension as the platform grows.
 
 ---
 
-# Authentication Flow Overview
+## 🚀 Overview
 
-1. Register user
-2. Verify OTP
-3. Login user
-4. Use access token for protected routes
-5. Logout when done
+MumAid API provides endpoints for:
 
+* User authentication and account management
+* Healthcare services and provider resources
+* Maternal support tools (remedies, exercises, and milk support)
+* Opportunities and admin-managed programs
+* Partner support and engagement resources
+* Community feeds and content updates
+* General API access and system endpoints
 ---
 
-# API Endpoints
-
-## 1. Register User
-
-**Endpoint:**
-
+## 🌐 Base URL
+production:
 ```
-POST api/auth/v1/register/
+https://momaid-backend.onrender.com/
 ```
 
-### Request Body
-
-```json
-{
-  "email": "youremail@example.com",
-  "password": "your_password",
-  "role": "mother"
-}
+development:
 ```
-
-### Response
-
-```json
-{
-  "detail": "User created. Please activate your account."
-}
+http://localhost:8000/
 ```
 
 ---
 
-## 2. Verify OTP
+## ⚙️ Getting Started
 
-**Endpoint:**
+### Prerequisites
 
-```
-POST api/auth/v1/verify/token/
-```
+* Python (>=3.12+ recommended)
+* pip
+* Database (PostgreSQL)
+* Docker
 
-### Request Body
+### Installation
 
-```json
-{
-  "email": "youremail@example.com",
-  "otp": "123456"
-}
-```
-
-### Response
-
-```json
-{
-  "detail": "Email verified successfully"
-}
-```
-
----
-
-## 3. Login User
-
-**Endpoint:**
+```bash
+git clone git@github.com:rufoabrahamguyo/momAid-backend.git
+cd momAid-backend
+docker compose --build
 
 ```
-POST api/auth/v1/login/
-```
 
-### Request Body
+**NB:// depending on your os, docker compose may fail and its highly encouraged to use **docker-compose** **
 
-```json
-{
-  "email": "youremail@example.com",
-  "password": "your_password"
-}
-```
+### Running the Server
 
-### Response
-
-```json
-{
-  "access": "access_token_here",
-  "refresh": "refresh_token_here"
-}
+```bash
+docker compose up
 ```
 
 ---
 
-## 4. Refresh Token
+## 🔐 Authentication
 
-**Endpoint:**
+This API uses token-based authentication.
 
+Include the token in your request headers:
+
+```http
+Authorization: Bearer <your_token>
 ```
-POST api/auth/v1/login/refresh/token/
-```
 
-### Request Body
-
-```json
-{
-  "refresh": "refresh_token_here"
-}
-```
+To obtain a token, use the verify-otp or login endpoint (see Auth docs below).
 
 ---
 
-## 5. Logout User
+## 📚 API Documentation
 
-**Endpoint:**
+Detailed endpoint documentation is split into modules for scalability:
 
-```
-POST api/auth/v1/logout/
-```
-
-### Request Body
-
-```json
-{
-  "refresh": "refresh_token_here"
-}
-```
-
-### Responses
-
-```json
-205 Reset Content
-```
-
-```json
-{
-  "detail": "Refresh token required"
-}
-```
-
+* [Auth](./docs/auth.md)
+* [Feeds](./docs/feeds.md)
+* [Partner](./docs/partner.md)
 ---
 
-## 6. Get Current User
-
-**Endpoint:**
-
-```
-GET api/auth/v1/whoami/
-```
-
-### Response (example)
-
-```json
-{
-  "id": "uuid",
-  "email": "user@example.com",
-  "role": "mother",
-  "is_active": true
-}
-```
-
----
-
-## 7. Upload Profile Image
-
-**Endpoint:**
-
-```
-PUT api/auth/v1/profile/image/
-```
-
-### Headers
-
-```
-Authorization: Bearer <access_token>
-Content-Type: multipart/form-data
-```
-
-### Request Body (form-data)
-
-```
-profile_pic: <image_file>
-```
-
-### Validation Rules
-
-* Max size: 10MB
-* Allowed formats: jpg, jpeg, png
+## 📦 Request & Response Format
 
 ### Success Response
 
 ```json
 {
-  "detail": "Profile image updated",
-  "url": "https://res.cloudinary.com/..."
-}
-```
-
-### Error Responses
-
-```json
-{
-  "detail": "No image provided"
-}
-```
-
-```json
-{
-  "detail": "Image must be <= 10MB"
-}
-```
-
-```json
-{
-  "detail": "Only jpg, jpeg, png allowed"
-}
-```
----
-
-## 8. Login User Via Google
-
-**Endpoint:**
-
-```
-POST api/auth/v1/google/social-login/
-```
-
-### Request Body
-
-```json
-{
-  "token": "ID_TOKEN_FROM_FRONTEND"
-}
-```
-
-### Response
-
-```json
-{
-  "access": "access_token_here",
-  "refresh": "refresh_token_here"
-}
-```
----
-
-# Feeds & Video Features (NEW)
-
-## 9. Upload User Video
-
-**Endpoint:**
-
-```
-POST api/feeds/v1/upload/video/
-```
-
-### Headers
-
-```
-Authorization: Bearer <access_token>
-Content-Type: multipart/form-data
-```
-
-### Request Body (form-data)
-
-```
-video_file_path: <video_file>
-attributes[title]: "My video title"
-attributes[description]: "Optional description"
-```
-
-### Notes
-
-* Video is uploaded to Cloudinary
-* Duration and size are auto-extracted
-
-### Success Response
-
-```json
-{
-  "detail": "Video uploaded successfully",
-  "data": {
-    "id": 1,
-    "video_file": "https://res.cloudinary.com/...",
-    "user": "user_id",
-    "attributes": {
-      "id": 10,
-      "title": "My video title",
-      "description": "Optional description",
-      "duration": 12.5,
-      "size": 1048576,
-      "created_at": "2026-04-26T...",
-      "updated_at": "2026-04-26T..."
-    }
-  }
+  "detail": "success message",
+  "status": 201
 }
 ```
 
@@ -317,189 +98,74 @@ attributes[description]: "Optional description"
 
 ```json
 {
-  "error": "Upload failed"
+  "detail": "error message",
+  "status": 400/401/404/500
 }
 ```
 
 ---
 
-## 10. Get All Videos (Feed)
+## ⚠️ HTTP Status Codes
 
-**Endpoint:**
-
-```
-GET api/feeds/v1/videos/all/
-```
-
-### Response
-
-```json
-[
-  {
-    "id": 1,
-    "video_file": "https://...",
-    "user": "user_id",
-    "attributes": {
-      "title": "...",
-      "description": "...",
-      "duration": 10,
-      "size": 12345,
-      "created_at": "..."
-    }
-  }
-]
-```
+| Code | Meaning               |
+| ---- | --------------------- |
+| 200  | OK                    |
+| 201  | Created               |
+| 400  | Bad Request           |
+| 401  | Unauthorized          |
+| 404  | Not Found             |
+| 500  | Internal Server Error |
 
 ---
 
-## 11. Get User Specific Videos
+## 🔑 Environment Variables
 
-**Endpoint:**
+Set up your environment variables before running the project.
 
-```
-GET api/feeds/v1/user/specific/videos/
-```
+1. Create a `.env` file
 
-### Response
+Create a .env file in the root directory of the project.
 
-```json
-[
-  {
-    "id": 1,
-    "video_file": "https://...",
-    "user": "user_id",
-    "attributes": {
-      "title": "...",
-      "description": "...",
-      "duration": 10,
-      "size": 12345,
-      "created_at": "..."
-    }
-  }
-]
+2. Copy from the example file
+
+Copy the contents of **.env.example** into your **.env** file:
+
+```bash
+cp .env.example .env
 ```
 
-# 💬 COMMENT SYSTEM
+3. Update values
 
-The system supports:
-
-* Comments on videos
-* 1-level replies only
-* Backend-controlled user assignment
-* Nested comment retrieval
+Edit the **.env** file and provide the required values
 
 ---
 
-## Comment Model Rules
+## 🧪 Testing
 
-* user is set by backend (`request.user`)
-* video is set via URL
-* replies only allowed one level deep
-* no self-assigned user or video from frontend
+You can test endpoints using:
+
+* Postman
+* Thunder Client
+* cURL
+
 
 ---
 
-## Create Comment
+## 🤝 Contributing
 
-```
-POST api/feeds/v1/videos/<video_id>/comments/create/
-```
+Contributions are welcome.
 
-### Body
-
-```json
-{
-  "content": "Nice video!"
-}
-```
+1. Fork the repository
+2. Create a new branch (`feature/your-feature`)
+3. Commit your changes
+4. Push to your branch
+5. Open a Pull Request
 
 ---
 
-## Get Video Comments
+## 📄 License
 
-```
-GET api/feeds/v1/videos/<video_id>/comments/
-```
-
-### Response
-
-```json
-[
-  {
-    "id": 1,
-    "content": "Nice video",
-    "created_at": "...",
-    "replies": [
-      {
-        "id": 2,
-        "content": "I agree",
-        "created_at": "..."
-      }
-    ]
-  }
-]
-```
+This project is licensed under the MIT License.
+See the [LICENSE](./LICENSE) file for details.
 
 ---
-
-## Reply to Comment
-
-```
-POST api/feeds/v1/comments/<comment_id>/reply/
-```
-
-### Body
-
-```json
-{
-  "content": "Reply message"
-}
-```
-
-### Rules
-
-* Only 1-level replies allowed
-* Replies to replies are blocked
-
----
-
-# Authentication Header
-
-```
-Authorization: Bearer <access_token>
-```
-
----
-
-
-# Status Codes
-
-* `200` → Success
-* `201` → Created
-* `205` → Logout success
-* `400` → Bad request
-* `401` → Unauthorized
-* `403` → Forbidden
-
----
-
-# API Modules Overview
-
-* Authentication → `/api/auth/`
-* Feeds (Videos) → `/api/feeds/`
-* Opportunities → `/api/opportunities/`
-* Remedies → `/api/remedies/`
-* Exercises → `/api/exercises/`
-* Milk Support → `/api/milk/`
-* Partner → `/api/partner/`
-* Healthcare → `/api/healthcare/`
-
----
-
-# API Docs
-
-Swagger UI available at:
-
-```
-/api/docs/
-```
