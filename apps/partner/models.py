@@ -80,6 +80,7 @@ class PartnerTaskCompletion(models.Model):
         PartnerTask,
         on_delete=models.CASCADE, related_name="partner_tasks")
     status = models.CharField(max_length=20, default="completed") 
+    notes = models.TextField(null=True, blank=True)
     completed_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
