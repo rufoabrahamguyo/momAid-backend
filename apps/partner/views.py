@@ -147,7 +147,7 @@ class ListPartnerTaskCompletion(APIView):
         if user.role != 'partner':
             return Response({'detail': 'Only partners can complete these tasks'}, status=403)
 
-        tasks = PartnerTask.objects.all().filter(partner=user)
+        tasks = PartnerTaskCompletion.objects.all().filter(partner=user)
         
         serializer = PartnerTaskCompletionSerializer(tasks, many=True)
 
