@@ -111,33 +111,33 @@ class VerifyTokenView(APIView):
             if not user:
                 return Response({"detail": "User not found"}, status=404)
 
-                verification_success = verify_email_otp(email, user_otp)
+            verification_success = verify_email_otp(email, user_otp)
 
-                if verification_success:
-                    user.is_active = True
-                    user.save()
+            if verification_success:
+                user.is_active = True
+                user.save()
 
-                    refresh = RefreshToken.for_user(user)
+                refresh = RefreshToken.for_user(user)
 
-                    return Response(
-                        {
-                            "detail": "Email verified successfully",
-                            "access": str(refresh.access_token),
-                            "refresh": str(refresh),
-                            "email": user.email,
-                        },
+                return Response(
+                    {
+                        "detail": "Email verified successfully",
+                        "access": str(refresh.access_token),
+                        "refresh": str(refresh),
+                        "email": user.email,
+                    },
                         status=200,
                     )
 
-                return Response(
-                    {"detail": "Invalid or expired OTP"},
+            return Response(
+                {"detail": "Invalid or expired OTP"},
                     status=400
                 )
 
         except Exception as e:
             return Response({"detail": str(e)}, status=500)
 
-        return Response({"detail": "Invalid or expired OTP"}, status=400)
+        
 
 class CurrentUserView(APIView):
     permission_classes = [IsAuthenticated]
