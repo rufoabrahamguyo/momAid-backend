@@ -1,20 +1,20 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import MotherProfile, PartnerProfile, SupportContact
+from .models import MotherProfile, PartnerProfile
 
 User = get_user_model()
 
-class SupportContactSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SupportContact
-        fields = "__all__"
+# class SupportContactSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = SupportContact
+#         fields = "__all__"
 
 class MotherProfileSerializer(serializers.ModelSerializer):
-    support_contacts = SupportContactSerializer(many=True, read_only=True)
-    
+    # support_contacts = SupportContactSerializer(many=True, read_only=True)
+ 
     class Meta:
         model = MotherProfile
-        fields = ["baby_due_date", "baby_birth_date", "partner", "support_contacts"]
+        fields = ["baby_due_date", "baby_birth_date", "partner"]
 
 class PartnerProfileSerializer(serializers.ModelSerializer):
     class Meta:
