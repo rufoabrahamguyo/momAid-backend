@@ -3,6 +3,7 @@
 echo "Starting Django..."
 
 echo "Applying database migrations..."
+
 python manage.py migrate --noinput
 
 # 2. Start Gunicorn
