@@ -91,16 +91,16 @@ class PartnerProfile(models.Model):
     def __str__(self):
         return f"Partner email: {self.user.email}"
 
-class SupportContact(models.Model):
-    class ContactType(models.TextChoices):
-        PERSONAL = "personal", "Personal Support"
-        OB = "ob", "Obstetrician"
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    mother = models.ForeignKey(MotherProfile, on_delete=models.CASCADE, related_name="support_contacts")
-    name = models.CharField(max_length=200)
-    phone = models.CharField(max_length=20, blank=True)
-    email = models.EmailField(blank=True)
-    type = models.CharField(max_length=20, choices=ContactType.choices)
+# class SupportContact(models.Model):
+#     class ContactType(models.TextChoices):
+#         PERSONAL = "personal", "Personal Support"
+#         OB = "ob", "Obstetrician"
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     mother = models.ForeignKey(MotherProfile, on_delete=models.CASCADE, related_name="support_contacts")
+#     name = models.CharField(max_length=200)
+#     phone = models.CharField(max_length=20, blank=True)
+#     email = models.EmailField(blank=True)
+#     type = models.CharField(max_length=20, choices=ContactType.choices)
 
-    def __str__(self):
-        return f"{self.name} ({self.type})"
+#     def __str__(self):
+#         return f"{self.name} ({self.type})"
