@@ -138,3 +138,10 @@ LOGGING = {
         '': {'handlers': ['console'], 'level': 'INFO'},
     },
 }
+
+CELERY_BROKER_USE_SSL = {
+    'ssl_cert_reqs': 'none'
+}
+CELERY_REDIS_BACKEND_USE_SSL = {
+    'ssl_cert_reqs': 'none'
+}
