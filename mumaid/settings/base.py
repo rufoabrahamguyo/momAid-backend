@@ -11,6 +11,8 @@ env = environ.Env()
 # Only read .env here if it exists, otherwise environment variables handle it
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
+
+
 SECRET_KEY = env("SECRET_KEY", default="django-insecure-default-key-change-me")
 
 INSTALLED_APPS = [
