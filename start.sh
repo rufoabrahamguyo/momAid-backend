@@ -3,7 +3,7 @@
 echo "Starting Django..."
 
 echo "Applying database migrations..."
-python manage.py migrate 
+python manage.py migrate --fake accounts
 
 # 2. Start Gunicorn
 

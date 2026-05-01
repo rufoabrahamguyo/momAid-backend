@@ -27,13 +27,19 @@ class UserManager(BaseUserManager):
             raise ValueError("Superuser must have is_staff=True.")
         return self.create_user(email, password, **extra_fields)
 
-class User(AbstractBaseUser, PermissionsMixin):
+class BaseModel(models.Model):
+    public_id = models.UUIDField(default=uuid.uuid4, editable=False, null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+class User(AbstractBaseUser, PermissionsMixin, BaseModel):
+
     ROLE_CHOICES = [
         ('mother', 'MOTHER'), 
         ('partner', 'PARTNER'), 
     ]
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(max_length=50, unique=True, db_index=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='mother')
     is_staff = models.BooleanField(default=False)
@@ -49,8 +55,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-class MotherProfile(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+class MotherProfile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="mother_profile")
     baby_due_date = models.DateField(null=True, blank=True)
     baby_birth_date = models.DateField(null=True, blank=True)
@@ -62,12 +67,12 @@ class MotherProfile(models.Model):
         blank=True, 
         related_name="linked_mother"
     )
-    
 
     def get_current_mother_week(self):
 
         if not self.baby_due_date:
             return 1
+
         today = timezone.now().date()   
         days_remaining = (self.baby_due_date - today).days
 
@@ -79,8 +84,7 @@ class MotherProfile(models.Model):
     def __str__(self):
         return f"Mother Profile: {self.user.email}"
 
-class PartnerProfile(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+class PartnerProfile(BaseModel):
     user = models.OneToOneField(
         User, 
         on_delete=models.CASCADE, 
