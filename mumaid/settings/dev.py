@@ -20,3 +20,11 @@ EMAIL_HOST = "mailpit"
 EMAIL_PORT = 1025
 EMAIL_USE_TLS = False
 DEFAULT_FROM_EMAIL = "noreply@mumaid.local"
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
+    }
+}

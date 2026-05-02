@@ -27,6 +27,14 @@ def verify_email_otp(email: str, user_otp: str) -> bool:
         return True
     return False
 
+def resend_otp(email: str) -> str:
+    email = email.strip().lower()
+
+    cache.delete(f"otp:{email}")
+
+    return generate_email_otp(email)
+
+
 def verify_google_token(token: str):
     try:
         idinfo = id_token.verify_oauth2_token(

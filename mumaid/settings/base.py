@@ -95,7 +95,20 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
-    'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer']
+    'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day',
+
+        'otp_limit': '3/minute',
+        'login_limit': '5/minute',
+        'auth_limit': '10/hour',
+        'upload_limit': '5/day',
+    },
 }
 
 SIMPLE_JWT = {
@@ -139,9 +152,9 @@ LOGGING = {
     },
 }
 
-CELERY_BROKER_USE_SSL = {
-    'ssl_cert_reqs': 'none'
-}
-CELERY_REDIS_BACKEND_USE_SSL = {
-    'ssl_cert_reqs': 'none'
+CELERY_BEAT_SCHEDULE = {
+    'daily-db-cleanup': {
+        'task': 'apps.accounts.tasks.cleanup_stale_data',
+        'schedule': 86400.0, 
+    },
 }
