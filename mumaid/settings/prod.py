@@ -1,5 +1,6 @@
 from .base import *
 import dj_database_url
+import ssl
 
 DEBUG = False
 
@@ -35,3 +36,19 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # OTP / mail in RegisterView goes through Celery when True (recommended on Render).
 EMAIL_USE_CELERY = env.bool("EMAIL_USE_CELERY", default=False)
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": env("REDIS_URL"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "ssl_cert_reqs": ssl.CERT_NONE,
+            },
+        }
+    }
+}
+
+CELERY_REDIS_BACKEND_USE_SSL = {"ssl_cert_reqs": ssl.CERT_NONE}
+CELERY_BROKER_USE_SSL = {"ssl_cert_reqs": ssl.CERT_NONE}
