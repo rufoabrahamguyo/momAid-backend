@@ -32,3 +32,6 @@ EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# OTP / mail in RegisterView goes through Celery when True (recommended on Render).
+EMAIL_USE_CELERY = env.bool("EMAIL_USE_CELERY", default=False)
