@@ -9,18 +9,18 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.throttling import ScopedRateThrottle
+from rest_framework.throttling import ScopedRateThrottle, AnonRateThrottle
 
 from .serializers import RegisterSerializer, UserSerializer
 from .helpers import generate_email_otp, verify_email_otp, verify_google_token, resend_otp
+from .throttle import CustomRegistrationThrottle
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = 'auth_limit'
+    throttle_classes = [AnonRateThrottle,CustomRegistrationThrottle]
 
     def post(self, request):
         try:
@@ -145,8 +145,6 @@ class CurrentUserView(APIView):
 
 class GoogleSocialLoginView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = 'auth_limit'
 
     def post(self, request):
         token = request.data.get("token")
