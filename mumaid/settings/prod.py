@@ -1,6 +1,7 @@
 from .base import *
 import dj_database_url
 import ssl
+import os
 
 DEBUG = False
 
@@ -26,16 +27,14 @@ SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
 
-# OTP / mail in RegisterView goes through Celery when True (recommended on Render).
-EMAIL_USE_CELERY = env.bool("EMAIL_USE_CELERY", default=False)
+ANYMAIL = {
+    "RESEND_API_KEY": env("RESEND_EMAIL_API_KEY"),
+}
+
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
+
 
 CACHES = {
     "default": {

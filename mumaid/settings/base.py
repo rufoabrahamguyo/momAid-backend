@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
+    "anymail",
     "apps.accounts",
     "apps.opportunities",
     "apps.remedies",
@@ -101,12 +102,12 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/day',
+        'anon': '2/minute',
         'user': '1000/day',
 
         'otp_limit': '3/minute',
         'login_limit': '5/minute',
-        'auth_limit': '10/hour',
+        'auth_limit': '40/day',
         'upload_limit': '5/day',
     },
 }
@@ -123,7 +124,7 @@ SIMPLE_JWT = {
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        'DIRS': [BASE_DIR / 'templates'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -135,6 +136,8 @@ TEMPLATES = [
         },
     },
 ]
+print(f"DEBUG: BASE_DIR is {BASE_DIR}")
+print(f"DEBUG: Templates dir is {BASE_DIR / 'templates'}")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

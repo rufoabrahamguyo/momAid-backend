@@ -15,9 +15,7 @@ User = get_user_model()
 
 @shared_task(autoretry_for=(Exception,), retry_backoff=5, retry_kwargs={"max_retries": 3})
 def send_otp_email(recipient_email, otp):
-    html_content = render_to_string("emails/otp_email.html", {
-        "otp": otp
-    })
+    html_content = render_to_string("emails/otp_email.html", {"otp": otp})
 
     message = EmailMessage(
         subject="Verify your account",
