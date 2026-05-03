@@ -27,10 +27,10 @@ SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
+EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
 
 ANYMAIL = {
-    "RESEND_API_KEY": env("RESEND_EMAIL_API_KEY"),
+    "SENDINBLUE_API_KEY": env("BREVO_API_KEY"),
 }
 
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
