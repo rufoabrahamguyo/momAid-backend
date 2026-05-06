@@ -22,6 +22,7 @@ class UserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("role", "admin")
 
         if extra_fields.get("is_staff") is not True:
             raise ValueError("Superuser must have is_staff=True.")
@@ -38,11 +39,13 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
     ROLE_CHOICES = [
         ('mother', 'MOTHER'), 
         ('partner', 'PARTNER'), 
+        ('admin', 'Admin'),
     ]
 
     email = models.EmailField(max_length=50, unique=True, db_index=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='mother')
     is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     image = CloudinaryField(null=True, blank=True)
     joined_at = models.DateTimeField(auto_now_add=True)

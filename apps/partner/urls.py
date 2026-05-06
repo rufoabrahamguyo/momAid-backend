@@ -6,6 +6,7 @@ from .views import (
     CreatePartnerTaskView,
     ListPartnerTaskView,
     ListPartnerTaskCompletion,
+    ListAdminPartnerTasksView,
 )
 
 urlpatterns = [
@@ -15,5 +16,6 @@ urlpatterns = [
     path("v1/list/partner/tasks/", ListPartnerTaskView.as_view(), name="list-partner-tasks"),
     path("v1/list/completion/tasks/", ListPartnerTaskCompletion.as_view(), name="list-completed-tasks"),
     path("v1/<int:task_id>/complete/", CreatePartnerTaskCompletionView.as_view(), name="create-partner-task"),
+    path("v1/admin/partner/tasks/", ListAdminPartnerTasksView.as_view(), name="admin-partner-tasks")
 
 ]

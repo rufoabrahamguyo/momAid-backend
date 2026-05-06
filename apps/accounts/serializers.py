@@ -50,6 +50,7 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "role",
             "is_active",
+            "is_staff",
             "joined_at",
             "updated_at",
             "profile",

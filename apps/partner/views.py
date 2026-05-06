@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -152,6 +152,12 @@ class ListPartnerTaskCompletion(APIView):
         serializer = PartnerTaskCompletionSerializer(tasks, many=True)
 
         return Response(serializer.data, status=200)
+
+
+class ListAdminPartnerTasksView(generics.ListAPIView):
+    permission_classes = [IsAdminUser]
+    serializer_class = PartnerTaskSerializer
+    queryset = PartnerTask.objects.all()
 
 
     
