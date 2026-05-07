@@ -53,6 +53,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.accounts.middleware.MomAidGlobalRateLimiter",
 ]
 
 ROOT_URLCONF = "mumaid.urls"
@@ -136,8 +137,7 @@ TEMPLATES = [
         },
     },
 ]
-print(f"DEBUG: BASE_DIR is {BASE_DIR}")
-print(f"DEBUG: Templates dir is {BASE_DIR / 'templates'}")
+
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
