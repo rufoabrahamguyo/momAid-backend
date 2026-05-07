@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [AnonRateThrottle,CustomRegistrationThrottle]
 
     def post(self, request):
         try:
@@ -43,8 +42,6 @@ class RegisterView(APIView):
 
 class ImageProfileUploaderView(APIView):
     permission_classes = [IsAuthenticated]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = 'upload_limit'
 
     def put(self, request):
         MAX_SIZE = 5 * 1024 * 1024
@@ -108,8 +105,6 @@ class LogoutView(APIView):
 
 class VerifyTokenView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = 'otp_limit'
 
     def post(self, request):
         email = request.data.get("email")
@@ -171,8 +166,6 @@ class GoogleSocialLoginView(APIView):
 
 class ResendOTPView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle] 
-    throttle_scope = 'otp_limit'
 
     def post(self, request):
         email = request.data.get("email")
