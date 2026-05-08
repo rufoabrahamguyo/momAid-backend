@@ -205,6 +205,28 @@ Update the user's avatar. Images are stored and served via Cloudinary.
 }
 ```
 
+## 7. Verify OTP
+
+Resend the otp back to the user.
+
+**Endpoint:** `POST api/auth/v1/resend-otp`
+
+### Request Body
+
+```json
+{
+  "email": "user@example.com",
+}
+```
+
+### Response
+
+```json
+{
+  "detail": "If the email exists, a code has been sent.",
+}
+```
+
 ---
 
 ## ⚠️ Common Error Codes
