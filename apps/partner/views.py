@@ -5,56 +5,62 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import PartnerTask, PartnerTaskCompletion, InviteCode
+from .paginator import TaskLimitPaginator
 
 from .serializers import (
     PartnerTaskCompletionSerializer,
     PartnerTaskSerializer,
 )
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
+from datetime import timezone, timedelta
 
 class GenerateCodeView(APIView):
+    def post(self, request):
+ 
+        try:
+            new_invite, created = InviteCode.objects.update_or_create(
+                creator=request.user,
+                defaults={
+                    "code": InviteCode.generate_unique_code(),
+                    "expires_at": timezone.now() + timedelta(hours=2)
+                }
+            )
+
+            return Response({
+                "code": new_invite.code,
+                "expires_at": new_invite.expires_at
+            }, status=200)
+
+        except Exception as e:
+           return Response({"error": str(e)}, status=400)
+    
+class LinkPartnerView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-
-        user = request.user 
-
-        try:
-            InviteCode.objects.filter(creator=user).delete()
-
-            new_invite = InviteCode.objects.create(creator=user)
-
-            return Response({
-                "code": new_invite.code, 
-                "expires_at": new_invite.expires_at
-            }, status=201)
-        except Exception as e:
-            return Response({"error": str(e)}, status=400)
-
-
-class LinkPartnerView(APIView):
-
-    def post(self, request):
         partner_code = request.data.get("invite_code", "").upper().strip()
+        partner_profile = getattr(request.user, "partner_profile", None)
         
-
-        partner_profile = request.user.partner_profile
+        if not partner_profile:
+            return Response({'detail': 'Partner profile not found'}, status=404)
 
         try:
-            invite = InviteCode.objects.get(code=partner_code)
-
+            invite = InviteCode.objects.select_related('creator__mother_profile').get(code=partner_code)
+            
             if invite.is_expired:
                 invite.delete()
                 return Response({'error': 'Code expired.'}, status=400)
 
-            mother_user = invite.creator
-            mother_profile = mother_user.mother_profile
-            
+            mother_profile = getattr(invite.creator, 'mother_profile', None)
+            if not mother_profile:
+                return Response({'detail': 'Mother profile not found'}, status=404)
 
-            mother_profile.partner = partner_profile
-            mother_profile.save()
-
-            invite.delete()
+            with transaction.atomic():
+                mother_profile.partner = partner_profile
+                mother_profile.save()
+                invite.delete()
             
             return Response({"message": "Successfully linked!"}, status=200)
 
@@ -63,14 +69,10 @@ class LinkPartnerView(APIView):
 
         
 class CreatePartnerTaskView(APIView):
+    permission_classes = [IsAdminUser]
 
     def post(self, request):
         user = request.user
-
-        if not user.is_staff:
-            return Response({
-                "detail": "Unathorized access detected"
-            }, status=401)
 
         serializer = PartnerTaskSerializer(data=request.data)
 
@@ -80,9 +82,12 @@ class CreatePartnerTaskView(APIView):
             return Response({
                 'detail': 'Resource created successfully'
             }, status=201)
+
         return Response(serializer.errors, status=400)
 
 class ListPartnerTaskView(APIView):
+    pagination_class = TaskLimitPaginator
+
     def get(self, request):
         partner_profile = getattr(request.user, 'partner_profile', None)
         
@@ -99,7 +104,14 @@ class ListPartnerTaskView(APIView):
         tasks = PartnerTask.objects.filter(
             baby_age_weeks_min__lte=mother_current_week,
             baby_age_weeks_max__gte=mother_current_week
-        )
+        ).order_by('id')
+
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(tasks, request)
+
+        if page is not None:
+            serializer = PartnerTaskSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
 
         serializer = PartnerTaskSerializer(tasks, many=True)
 
@@ -140,17 +152,24 @@ class CreatePartnerTaskCompletionView(APIView):
         return Response({'detail': 'Task completed successfully'}, status=201)
 
 class ListPartnerTaskCompletion(APIView):
+    permission_classes = [IsAuthenticated]
+    pagination_class = TaskLimitPaginator
 
     def get(self, request):
         user = request.user
-
         if user.role != 'partner':
-            return Response({'detail': 'Only partners can complete these tasks'}, status=403)
+            return Response({'detail': 'Access denied'}, status=403)
 
-        tasks = PartnerTaskCompletion.objects.all().filter(partner=user)
-        
+        tasks = PartnerTaskCompletion.objects.filter(partner=user).order_by('-id')
+
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(tasks, request)
+
+        if page is not None:
+            serializer = PartnerTaskCompletionSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
         serializer = PartnerTaskCompletionSerializer(tasks, many=True)
-
         return Response(serializer.data, status=200)
 
 

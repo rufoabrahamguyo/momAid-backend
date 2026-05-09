@@ -18,11 +18,11 @@ Upload a video file with custom attributes.
 
 **Header:**
 
-```
+```txt
 Authorization: Bearer <access_token>
 ```
 
-**Type:** multipart/form-data
+**Type:** `multipart/form-data`
 
 ### Request Body
 
@@ -38,14 +38,16 @@ Authorization: Bearer <access_token>
 {
   "detail": "Video uploaded successfully",
   "data": {
-    "id": 1,
+    "public_id": "public_id string will appear",
     "video_file": "https://res.cloudinary.com/...",
+    "created_at": "2026-04-26T...",
     "user": "user_uuid",
     "attributes": {
+      "public_id": "public_id string will appear",
       "title": "My video title",
       "duration": 12.5,
       "size": 1048576,
-      "created_at": "2026-04-26T..."
+      ...
     }
   },
   "status": 201
@@ -56,22 +58,74 @@ Authorization: Bearer <access_token>
 
 ## 2. Get Global Feed
 
-Retrieve all videos uploaded across the platform.
+Retrieve all videos uploaded across the platform using Infinite Scroll (Cursor Pagination).
 
 **Endpoint:** `GET api/feeds/v1/videos/all/`
+
+### Success Response
+
+```json
+{
+  "next": "http://api.site.com/api/.../?cursor=cD0yMDI2LTA1...",
+  "previous": null,
+  "results": [
+    {
+      "public_id": "public_id string will appear",
+      "video_file": "https://res.cloudinary.com/...",
+      "user": {
+        "public_id": "public_id string will appear",
+        "username": "dev_user"
+        ...
+      },
+      "attributes": {
+        "public_id": "public_id string will appear",
+        "title": "My video title",
+        "duration": 12.5
+        ...
+      }
+    }
+  ]
+}
+```
 
 ---
 
 ## 3. Get My Videos
 
-Retrieve videos uploaded by the authenticated user.
+Retrieve videos uploaded by the authenticated user using Cursor Pagination.
 
 **Endpoint:** `GET api/feeds/v1/user/specific/videos/`
 
 **Header:**
 
-```
+```txt
 Authorization: Bearer <access_token>
+```
+
+### Success Response
+
+```json
+{
+  "next": "http://api.site.com/api/.../?cursor=cD0yMDI2LTA1...",
+  "previous": null,
+  "results": [
+    {
+      "public_id": "public_id string will appear",
+      "video_file": "https://res.cloudinary.com/...",
+      "user": {
+        "public_id": "public_id string will appear",
+        "username": "my_account"
+        ...
+      },
+      "attributes": {
+        "public_id": "public_id string will appear",
+        "title": "Backend API Walkthrough",
+        "duration": 20.4
+        ...
+      }
+    }
+  ]
+}
 ```
 
 ---
@@ -80,8 +134,9 @@ Authorization: Bearer <access_token>
 
 The system supports threaded conversations with a focus on simplicity.
 
-* **1-Level Nesting:** You can comment on a video and reply to a comment.
-* **Anti-Spam:** Replies to existing replies are blocked.
+* **1-Level Nesting:** Users can comment on a video and reply to a comment.
+* **Anti-Spam Protection:** Replies to existing replies are blocked.
+* **Paginated Comments:** Optimized using Limit/Offset Pagination.
 
 ---
 
@@ -119,37 +174,60 @@ Reply to an existing comment.
 
 ## 6. Get Video Comments
 
-Retrieve all comments and their nested replies for a specific video.
+Retrieve paginated top-level comments and their nested replies.
 
 **Endpoint:** `GET api/feeds/v1/videos/<video_id>/comments/`
 
-### Response
+### Success Response
 
 ```json
-[
-  {
-    "id": 10,
-    "content": "Great advice!",
-    "user": "user_name",
-    "created_at": "2026-04-26T...",
-    "replies": [
-      {
-        "id": 11,
-        "content": "Thanks for the support!",
-        "user": "author_name",
-        "created_at": "2026-04-26T..."
-      }
-    ]
-  }
-]
+{
+  "count": 42,
+  "next": "http://api.site.com/api/.../?limit=20&offset=20",
+  "previous": null,
+  "results": [
+    {
+      "public_id": "public_id string will appear",
+      "content": "Great advice!",
+      "user": {
+        "username": "user_name",
+        "avatar": "https://cdn.site.com/avatar.jpg"
+      },
+      "created_at": "2026-04-26T...",
+      "replies": [
+        {
+          "public_id": "public_id string will appear",
+          "content": "Thanks!",
+          "user": {
+            "public_id": "public_id string will appear",
+            "username": "author_name"
+            ...
+          },
+          "created_at": "2026-04-26T..."
+        }
+      ]
+    }
+  ]
+}
 ```
+
+---
+
+## 🚀 Performance & Architecture
+
+* **N+1 Query Optimized:** Uses `select_related` and `prefetch_related` to minimize database hits.
+* **Stable Cursor Pagination:** Video feeds are ordered by `created_at DESC`.
+* **Efficient Comment Loading:** Replies are prefetched for faster nested serialization.
+* **Cloudinary Integration:** Media URLs are automatically generated as absolute URLs.
+* **Context-Aware Serializers:** Request context is passed into serializers for dynamic response handling.
 
 ---
 
 ## ⚠️ Feed Error Codes
 
-| Status | Detail                                                       |
-| ------ | ------------------------------------------------------------ |
-| 400    | Upload failed or invalid comment content                     |
-| 403    | Forbidden: Attempting to reply to a reply (nested > 1 level) |
-| 404    | Video or Comment ID not found                                |
+| Status | Detail                                                |
+| ------ | ----------------------------------------------------- |
+| 400    | Invalid data or multipart/form-data formatting issues |
+| 403    | Only 1-level deep replies are permitted               |
+| 404    | The requested Video or Comment ID does not exist      |
+| 500    | Database error or Cloudinary upload timeout           |

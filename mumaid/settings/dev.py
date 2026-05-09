@@ -28,3 +28,6 @@ CACHES = {
         "LOCATION": "unique-snowflake",
     }
 }
+
+VIDEO_STORAGE_BACKEND = 'django.core.files.storage.FileSystemStorage'
+DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'

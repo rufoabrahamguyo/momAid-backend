@@ -91,13 +91,20 @@ Authorization: Bearer <partner_access_token>
 ```json
 [
   {
-    "id": 1,
-    "title": "Sterilize Bottles",
-    "description": "Ensure all feeding equipment is sterilized.",
-    "icon": "bottle_icon_url",
-    "estimated_time": "15 mins",
-    "why_it_matters": "Protects baby's immune system.",
-    "is_recurring": true
+  "count": 42,
+  "next": "http://api.site.com/api/.../?limit=20&offset=20",
+  "previous": null,
+  "results": [
+  {
+      "public_id": "public_id string will appear",
+      "title": "Sterilize Bottles",
+      "description": "Ensure all feeding equipment is sterilized.",
+      "icon": "bottle_icon_url",
+      "estimated_time": "15 mins",
+      "why_it_matters": "Protects baby's immune system.",
+      "is_recurring": true
+  }
+  ]
   }
 ]
 ```
@@ -127,9 +134,9 @@ Authorization: Bearer <partner_access_token>
 
 ---
 
-### 5. List Completed Tasks
+### . List Available Tasks
 
-Retrieve the history of tasks completed by the partner.
+Retrieve a list of tasks relevant to the current week of the baby.
 
 **Endpoint:** `GET api/partner/v1/list/completion/tasks/`
 
@@ -139,6 +146,35 @@ Retrieve the history of tasks completed by the partner.
 Authorization: Bearer <partner_access_token>
 ```
 
+### Response Example
+
+```json
+[
+  {
+  "count": 42,
+  "next": "http://api.site.com/api/.../?limit=20&offset=20",
+  "previous": null,
+  "results": [
+    {
+    "public_id": "public_id string will appear",
+    "status": "completed",
+    "completed_at": "Date and Time will appear here"
+  {
+
+    "attrs": {
+        "public_id": "public_id string will appear",
+        "title": "Sterilize Bottles",
+        "description": "Ensure all feeding equipment is sterilized.",
+        "icon": "bottle_icon_url",
+        "estimated_time": "15 mins",
+        "why_it_matters": "Protects baby's immune system.",
+        "is_recurring": true
+    }
+  }}
+  ]
+  }
+]
+```
 ---
 
 ## 🛡 Staff Operations

@@ -51,3 +51,22 @@ CACHES = {
 
 CELERY_REDIS_BACKEND_USE_SSL = {"ssl_cert_reqs": ssl.CERT_NONE}
 CELERY_BROKER_USE_SSL = {"ssl_cert_reqs": ssl.CERT_NONE}
+
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "video": {
+        "BACKEND": "cloudinary_storage.storage.VideoCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": env("CLOUDINARY_CLOUD_NAME", default=""),
+    "API_KEY": env("CLOUDINARY_CLOUD_API_KEY", default=""),
+    "API_SECRET": env("CLOUDINARY_CLOUD_API_SECRET", default=""),
+}
+

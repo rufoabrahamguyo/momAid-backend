@@ -7,20 +7,16 @@ class VideoAttributesSerializer(serializers.ModelSerializer):
     class Meta:
         model = VideoAttributes
         fields = [
-            "id",
+            "public_id",
             "title",
             "description",
             "duration",
             "size",
-            "created_at",
-            "updated_at",
         ]
         read_only_fields = [
-            "id",
+            "public_id",
             "duration",
             "size",
-            "created_at",
-            "updated_at",
         ]
 
 
@@ -30,15 +26,15 @@ class VideoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Video
-        fields = ["id", "video_file", "user", "attributes", "video_file_path"]
-        read_only_fields = ["id", "user", "video_file"]
+        fields = ["public_id", "video_file", "user", "attributes", "video_file_path","created_at","updated_at",]
+        read_only_fields = ["public_id", "user", "video_file","created_at","updated_at",]
 
     def create(self, validated_data):
         validated_data.pop('video_file_path', None)
 
         attr_data = validated_data.pop('attributes')
         user = validated_data.pop('user')
-        video_url = validated_data.pop('video_file')
+        video_url = validated_data.pop('video_file', None)
 
         attribute_instance = VideoAttributes.objects.create(**attr_data)
 
@@ -55,15 +51,15 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ["id", "content", "created_at"]
-        read_only_fields = ["id", "created_at"]
+        fields = ["public_id", "content", "created_at"]
+        read_only_fields = ["public_id", "created_at"]
 
 
 class ReplySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ["id", "content", "created_at"]
+        fields = ["public_id", "content", "created_at"]
 
 
 class CommentListSerializer(serializers.ModelSerializer):
@@ -72,7 +68,7 @@ class CommentListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = [
-            "id",
+            "public_id",
             "content",
             "created_at",
             "replies"

@@ -7,20 +7,35 @@ import time
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+import uuid
 
+class BaseModel(models.Model):
+    public_id = models.UUIDField(primary_key=False, default=uuid.uuid4, editable=False, null=True, blank=True)
 
-class InviteCode(models.Model):
+    class Meta:
+        abstract = True
+
+class InviteCode(BaseModel):
     creator = models.OneToOneField(User, on_delete=models.CASCADE, related_name="active_code")
     code = models.CharField(unique=True, max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
+
+
+    @classmethod
+    def generate_unique_code(cls):
+        while True:
+            code = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+
+            if not cls.objects.filter(code=code).exists():
+                return code
 
     def save(self, *args, **kwargs):
         if not self.expires_at:
             self.expires_at = timezone.now() + timedelta(hours=2)
 
         if not self.code:
-            self.code = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+            self.code = self.generate_unique_code()
 
         super().save(*args,**kwargs)
 
@@ -31,8 +46,7 @@ class InviteCode(models.Model):
     def __str__(self):
         return f"{self.code} (For: {self.creator.email})"
 
-
-class PartnerTask(models.Model):
+class PartnerTask(BaseModel):
     CATEGORY_CHOICES = [
         ('health', 'Health & Nutrition'),
         ('logistics', 'Planning & Logistics'),
@@ -68,8 +82,7 @@ class PartnerTask(models.Model):
     def __str__(self):
         return f"Week {self.baby_age_weeks_min}: {self.title}"
 
-
-class PartnerTaskCompletion(models.Model):
+class PartnerTaskCompletion(BaseModel):
 
     partner = models.ForeignKey(
         User,
