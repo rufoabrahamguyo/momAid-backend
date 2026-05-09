@@ -1,6 +1,9 @@
 from django.db import models
-from cloudinary.models import CloudinaryField
+# from cloudinary.models import CloudinaryField
 from django.contrib.auth import get_user_model
+from django.utils.module_loading import import_string
+from django.conf import settings
+
 import uuid
 
 User = get_user_model()
@@ -21,8 +24,17 @@ class VideoAttributes(BaseModel):
     def __str__(self):
         return self.title
 
+def get_video_storage():
+    storage_class = import_string(settings.VIDEO_STORAGE_BACKEND)
+    return storage_class()
+
 class Video(BaseModel):
-    video_file = CloudinaryField('video', null=True, blank=True, resource_type='video')
+    video_file = models.FileField(
+        upload_to='videos',
+        storage=get_video_storage,
+        null=True,
+        blank=True
+    )
     
     attributes = models.OneToOneField(
         VideoAttributes, 

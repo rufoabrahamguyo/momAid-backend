@@ -34,7 +34,7 @@ class VideoSerializer(serializers.ModelSerializer):
 
         attr_data = validated_data.pop('attributes')
         user = validated_data.pop('user')
-        video_url = validated_data.pop('video_file')
+        video_url = validated_data.pop('video_file', None)
 
         attribute_instance = VideoAttributes.objects.create(**attr_data)
 

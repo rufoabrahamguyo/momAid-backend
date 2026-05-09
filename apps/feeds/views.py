@@ -10,39 +10,15 @@ from .paginator import VideoCursorPaginator, CommentLimitPaginator
 from django.shortcuts import get_object_or_404
 
 class UploadUserVideoView(APIView):
-
     def post(self, request):
         serializer = VideoSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
 
-        if serializer.is_valid():
-            file_to_upload = serializer.validated_data["video_file_path"]
+            video_file = serializer.validated_data.get('video_file_path')
 
-            try:
-                result = cloudinary.uploader.upload(
-                    file_to_upload,
-                    folder=f"user_{request.user.id}/videos", 
-                    resource_type="video"
-                )
-
-            except Exception as e:
-                return Response({'error': str(e)}, status=500)
-
-            serializer.save(
-                user=request.user,
-                video_file=result["secure_url"], 
-                attributes={
-                    **serializer.validated_data["attributes"],
-                    "duration": result.get("duration"),
-                    "size": result.get("bytes")
-                }
-            )
-
-            return Response({
-                'detail': 'Video uploaded successfully',
-                'data': serializer.data
-            }, status=201)
-
-        return Response(serializer.errors, status=400)
+            video = serializer.save(user=request.user, video_file=video_file)
+            
+            return Response(VideoSerializer(video).data, status=201)
 
 class UserSpecificVideoView(APIView):
     pagination_class = VideoCursorPaginator
@@ -70,16 +46,16 @@ class GetAllVideosView(APIView):
     pagination_class = VideoCursorPaginator
 
     def get(self, request):
-
         try:
-            videos = Video.objects.select_related('attributes', 'user').all().order_by('-created_at')
+            videos = Video.objects.select_related('attributes', 'user').order_by('-created_at')
 
             paginator = self.pagination_class()
             page = paginator.paginate_queryset(videos, request)
 
             if page is not None:
-                serializer = VideoSerializer(page, many=True)
-                return paginator.get_paginated_response(serializer.data, context={'request': request})
+                serializer = VideoSerializer(page, many=True, context={'request': request})
+                
+                return paginator.get_paginated_response(serializer.data)
 
             serializer = VideoSerializer(videos, many=True, context={'request': request})
             return Response(serializer.data, status=200)
