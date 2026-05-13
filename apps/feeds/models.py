@@ -1,7 +1,7 @@
 from django.db import models
 # from cloudinary.models import CloudinaryField
 from django.contrib.auth import get_user_model
-from django.utils.module_loading import import_string
+from django.core.files.storage import storages
 from django.conf import settings
 
 import uuid
@@ -25,8 +25,7 @@ class VideoAttributes(BaseModel):
         return self.title
 
 def get_video_storage():
-    storage_class = import_string(settings.BACKEND)
-    return storage_class()
+    return storages['default']
 
 class Video(BaseModel):
     video_file = models.FileField(

@@ -146,4 +146,4 @@ CELERY_BEAT_SCHEDULE = {
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'   
 
-VIDEO_STORAGE_BACKEND = 'cloudinary_storage.storage.VideoCloudinaryStorage'
+
