@@ -60,8 +60,8 @@ class GetAllVideosView(APIView):
             serializer = VideoSerializer(videos, many=True, context={'request': request})
             return Response(serializer.data, status=200)
         
-        except Exception as e:
-            return Response({'detail': f"Database error: {str(e)}"}, status=500)
+        except Exception:
+            return Response({'detail': "An internal error has occurred."}, status=500)
     
 class CreateVideoCommentView(APIView):
 
