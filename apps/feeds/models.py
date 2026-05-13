@@ -25,7 +25,7 @@ class VideoAttributes(BaseModel):
         return self.title
 
 def get_video_storage():
-    storage_class = import_string(settings.VIDEO_STORAGE_BACKEND)
+    storage_class = import_string(settings.BACKEND)
     return storage_class()
 
 class Video(BaseModel):

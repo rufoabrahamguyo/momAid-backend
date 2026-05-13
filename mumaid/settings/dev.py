@@ -29,5 +29,5 @@ CACHES = {
     }
 }
 
-VIDEO_STORAGE_BACKEND = 'django.core.files.storage.FileSystemStorage'
+BACKEND = 'django.core.files.storage.FileSystemStorage'
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
