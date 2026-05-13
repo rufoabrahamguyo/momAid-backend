@@ -54,7 +54,7 @@ CELERY_BROKER_USE_SSL = {"ssl_cert_reqs": ssl.CERT_NONE}
 
 STORAGES = {
     "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        "BACKEND": "cloudinary_storage.storage.VideoMediaCloudinaryStorage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
