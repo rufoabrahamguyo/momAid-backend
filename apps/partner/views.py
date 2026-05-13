@@ -1,3 +1,4 @@
+import logging
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -13,6 +14,7 @@ from .serializers import (
 )
 from django.contrib.auth import get_user_model
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 from datetime import timezone, timedelta
 
@@ -34,7 +36,8 @@ class GenerateCodeView(APIView):
             }, status=200)
 
         except Exception as e:
-           return Response({"error": str(e)}, status=400)
+            logger.exception("Failed to generate invite code for user %s", request.user.id)
+            return Response({"error": "An internal error occurred. Please try again later."}, status=500)
     
 class LinkPartnerView(APIView):
     permission_classes = [IsAuthenticated]
