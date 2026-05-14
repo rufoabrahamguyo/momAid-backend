@@ -146,6 +146,11 @@ Post a top-level comment on a specific video.
 
 **Endpoint:** `POST api/feeds/v1/videos/<video_id>/comments/create/`
 
+**Header:**
+```txt
+Authorization: Bearer <access_token>
+```
+
 ### Request Body
 
 ```json
@@ -162,6 +167,11 @@ Reply to an existing comment.
 
 **Endpoint:** `POST api/feeds/v1/comments/<comment_id>/reply/`
 
+**Header:**
+```txt
+Authorization: Bearer <access_token>
+```
+
 ### Request Body
 
 ```json
@@ -175,6 +185,11 @@ Reply to an existing comment.
 ## 6. Get Video Comments
 
 Retrieve paginated top-level comments and their nested replies.
+
+**Header:**
+```txt
+Authorization: Bearer <access_token>
+```
 
 **Endpoint:** `GET api/feeds/v1/videos/<video_id>/comments/`
 
@@ -211,15 +226,75 @@ Retrieve paginated top-level comments and their nested replies.
 }
 ```
 
+## 7. Create Watch History 
+**Endpoint:** `GET api/feeds/v1/history/create/<uuid:video_id>/`
+
+**Header:**
+```txt
+Authorization: Bearer <access_token>
+```
+Note: Please pass in the public id of the video, the api no longer supports exposing raw id
+
+### Request Body
+```json
+{
+  "last_watched_at": 0.0
+}
+```
+
+NB:// Please pass in a float to the attribute
 ---
 
-## 🚀 Performance & Architecture
+### Response 
+```json
+{
+  "detail": "Successfully saved video"
+}
+```
+---
 
-* **N+1 Query Optimized:** Uses `select_related` and `prefetch_related` to minimize database hits.
-* **Stable Cursor Pagination:** Video feeds are ordered by `created_at DESC`.
-* **Efficient Comment Loading:** Replies are prefetched for faster nested serialization.
-* **Cloudinary Integration:** Media URLs are automatically generated as absolute URLs.
-* **Context-Aware Serializers:** Request context is passed into serializers for dynamic response handling.
+## 8. List Watch History
+**Endpoint:** `GET api/feeds/v1/history/list/`
+
+**Header:**
+```txt
+Authorization: Bearer <access_token>
+```
+
+### Request Body:
+```json
+{
+}
+```
+
+### Response 
+```json
+{
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "video": {
+                "public_id": "6ff4f4a1-4d72-4c30-832b-f3cef3d63373",
+                "video_file": "http://localhost:8000/media/videos/videoplayback.mp4",
+                "attributes": {
+                    "public_id": "e955ceaa-e487-47d7-8719-72b20718bd6e",
+                    "title": "Funny reel",
+                    "description": "Funny real",
+                    "duration": null,
+                    "size": null
+                },
+                "created_at": "2026-05-13T20:43:51.723086Z"
+            },
+            "last_watched_at": 0.0,
+            "updated_at": "2026-05-14T14:13:43.069544Z",
+            "progress_percentage": 0
+        }
+    ]
+}
+```
+
+
 
 ---
 

@@ -5,7 +5,10 @@ from .views import (
     UserSpecificVideoView,
     ListVideoCommentsView,
     CreateVideoCommentView,
-    ReplyCommentView
+    ReplyCommentView,
+    CreateVideoHistoryView,
+    ContinueWatchingView,
+    ListVideoHistoryView,
 )
 
 urlpatterns = [
@@ -15,4 +18,7 @@ urlpatterns = [
     path("v1/videos/<int:video_id>/comments/",ListVideoCommentsView.as_view(),name="list-video-comments"),
     path("v1/videos/<int:video_id>/comments/create/",CreateVideoCommentView.as_view(),name="create-video-comment"),
     path("v1/comments/<int:comment_id>/reply/",ReplyCommentView.as_view(),name="reply-comment"),
+    path('v1/history/create/<uuid:video_id>/', CreateVideoHistoryView.as_view(), name='video-history-create'),
+    path('v1/history/continue/', ContinueWatchingView.as_view(), name='video-continue-watching'),
+    path('v1/history/list/', ListVideoHistoryView.as_view(), name='video-history-list'),
 ]

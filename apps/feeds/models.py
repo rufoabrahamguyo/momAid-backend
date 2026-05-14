@@ -17,7 +17,7 @@ class BaseModel(models.Model):
 class VideoAttributes(BaseModel):
     title = models.CharField(max_length=50, db_index=True)
     description = models.TextField()
-    duration = models.FloatField(null=True, blank=True, help_text="Duration in seconds")
+    duration = models.FloatField(null=True, blank=True, help_text="Duration in seconds", default=0.0)
     size = models.IntegerField(null=True, blank=True, help_text="Size in bytes")
 
 
@@ -66,5 +66,17 @@ class Comment(BaseModel):
 
     def __str__(self):
         return f"{self.user.email} commented"
+
+class VideoHistory(BaseModel):
+    video = models.ForeignKey(Video, on_delete=models.CASCADE, related_name='watched_history')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='users_history')
+    last_watched_at = models.FloatField(default=0.0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['video','user']
+        ordering = ['-updated_at']
+
 
     

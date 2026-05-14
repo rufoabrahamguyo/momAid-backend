@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import VideoAttributes, Video, Comment
+from .models import VideoAttributes, Video, Comment, VideoHistory
 
 
 class VideoAttributesSerializer(serializers.ModelSerializer):
@@ -73,3 +73,24 @@ class CommentListSerializer(serializers.ModelSerializer):
             "created_at",
             "replies"
         ]
+
+class VideoDetailsSerializer(serializers.ModelSerializer):
+    attributes = VideoAttributesSerializer(read_only=True)
+
+    class Meta:
+        model = Video 
+        fields = ['public_id', 'video_file', 'attributes', 'created_at']
+
+class VideoHistorySerializer(serializers.ModelSerializer):
+    video = VideoDetailsSerializer(read_only=True)
+    progress_percentage = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VideoHistory
+        fields = ['video', 'last_watched_at', 'updated_at', 'progress_percentage']
+
+    def get_progress_percentage(self, obj):
+        duration = obj.video.attributes.duration
+        if duration and duration > 0:
+            return min(round((obj.last_watched_at / duration) * 100, 2), 100)
+        return 0

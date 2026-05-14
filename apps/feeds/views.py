@@ -4,10 +4,11 @@ from rest_framework.views import APIView
 from rest_framework import status
 import cloudinary.uploader
 
-from .serializers import VideoSerializer,CommentSerializer, CommentListSerializer
-from .models import Video, Comment
+from .serializers import VideoSerializer,CommentSerializer, CommentListSerializer, VideoHistorySerializer
+from .models import Video, Comment,VideoHistory
 from .paginator import VideoCursorPaginator, CommentLimitPaginator
 from django.shortcuts import get_object_or_404
+from django.db.models import F, Q
 
 class UploadUserVideoView(APIView):
     def post(self, request):
@@ -108,8 +109,6 @@ class ReplyCommentView(APIView):
 
         return Response(serializer.errors, status=400)
 
-        
-
 class ListVideoCommentsView(APIView):
     pagination_class = CommentLimitPaginator
 
@@ -132,3 +131,82 @@ class ListVideoCommentsView(APIView):
         serializer = CommentListSerializer(comments, many=True, context={'request': request})
 
         return Response(serializer.data, status=200)
+
+class CreateVideoHistoryView(APIView):
+
+    def post(self, request, video_id):
+
+        progress = request.data.get('last_watched_at',0.0)
+
+        try:
+            video_obj= Video.objects.get(public_id=video_id)
+
+        except Video.DoesNotExist:
+            return Response({
+                'detail': 'Video not found'
+            }, status=404)
+
+        video, created = VideoHistory.objects.update_or_create(
+            user=request.user,
+            video=video_obj,
+            defaults={
+                'last_watched_at': progress
+            }
+        )
+
+        if not video: 
+            return Response({
+                'detail': 'Couldn\'t save video'
+            }, status=400)
+
+        return Response({
+            'detail': 'Successfully saved video'
+        }, status=201)
+
+
+class ContinueWatchingView(APIView):
+    pagination_class = VideoCursorPaginator
+
+    def get(self, request):
+        history_queryset = VideoHistory.objects.filter(user=request.user).filter(
+            Q(last_watched_at__gt=0) &
+            Q(last_watched_at__lt=F('video__attributes__duration'))
+        ).select_related(
+            'video', 'video__attributes'
+        )
+
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(history_queryset, request)
+
+        if page is not None:
+            serializer = VideoHistorySerializer(page, many=True, context={'request': request})
+            return paginator.get_paginated_response(serializer.data)
+        
+        serializer = VideoHistorySerializer(history_queryset, many=True, context={'request': request})
+
+        return Response(serializer.data, status=200)
+
+class ListVideoHistoryView(APIView):
+    pagination_class = VideoCursorPaginator
+
+    def get(self, request):
+        history_queryset = VideoHistory.objects.filter(
+            user=request.user
+        ).select_related(
+            'video', 
+            'video__attributes' 
+        )
+
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(history_queryset, request)
+
+        if page is not None:
+            serializer = VideoHistorySerializer(page, many=True, context={'request': request})
+            return paginator.get_paginated_response(serializer.data)
+        
+        serializer = VideoHistorySerializer(history_queryset, many=True, context={'request': request})
+        return Response(serializer.data, status=200)
+
+
+
+
