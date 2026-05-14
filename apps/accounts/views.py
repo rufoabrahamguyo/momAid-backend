@@ -11,7 +11,7 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.throttling import ScopedRateThrottle, AnonRateThrottle
 
-from .serializers import RegisterSerializer, UserSerializer
+from .serializers import RegisterSerializer, UserSerializer,UpdateMotherProfileSerializer,UpdateUserProfileSerializer
 from .helpers import generate_email_otp, verify_email_otp, verify_google_token, resend_otp
 from .throttle import CustomRegistrationThrottle
 
@@ -136,7 +136,9 @@ class CurrentUserView(APIView):
     def get(self, request):
         if not request.user.is_active:
             return Response({"detail": "Account inactive."}, status=403)
-        return Response(UserSerializer(request.user).data)
+
+        serializer = UserSerializer(request.user, context={'request': request})
+        return Response(serializer.data, status=200)
 
 class GoogleSocialLoginView(APIView):
     permission_classes = [AllowAny]
@@ -179,3 +181,32 @@ class ResendOTPView(APIView):
         except Exception as e:
             logger.error(f"Resend_Error: {str(e)}")
             return Response({'detail': 'Failed to process request.'}, status=500)
+
+class UpdateUserProfileView(APIView):
+
+    def put(self, request):
+        serializer = UpdateUserProfileSerializer(instance=request.user, data=request.data, partial=True)
+
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response({
+                'detail': 'User Profile updated successfully'
+            }, status=200)
+
+class UpdateMotherProfileView(APIView):
+
+    def put(self, request):
+
+        profile = getattr(request.user, 'mother_profile', None)
+
+        if not profile:
+            return Response({'error': 'Mother profile not found'}, status=404)
+            
+        serializer = UpdateMotherProfileSerializer(instance=profile, data=request.data, partial=True)
+
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response({
+                'detail': 'User Profile updated successfully'
+            },status=200)
+
