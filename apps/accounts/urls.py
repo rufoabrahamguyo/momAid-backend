@@ -5,8 +5,10 @@ from .views import (
     VerifyTokenView, 
     CurrentUserView, 
     ImageProfileUploaderView,
-    GoogleSocialLoginView,
+    # GoogleSocialLoginView,
     ResendOTPView,
+    UpdateMotherProfileView,
+    UpdateUserProfileView
     )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -28,6 +30,8 @@ urlpatterns = [
     path("v1/verify/token/", VerifyTokenView.as_view(), name="verify-otp-user"),
     path("v1/resend-otp/", ResendOTPView.as_view(), name="resend-otp"),
     path('v1/whoami/', CurrentUserView.as_view(),name="who-am-i"),
-    path("v1/google/social-login/", GoogleSocialLoginView.as_view(), name="google-social-login"),
+    # path("v1/google/social-login/", GoogleSocialLoginView.as_view(), name="google-social-login"),
     path("v1/profile/image/", ImageProfileUploaderView.as_view(), name="profile-image"),
+    path('v1/update/user/', UpdateUserProfileView.as_view(), name='update-user-profile'),
+    path('v1/update/mother/', UpdateMotherProfileView.as_view(), name='update-mother-profile'),
 ]

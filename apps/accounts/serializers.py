@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import MotherProfile, PartnerProfile
+import cloudinary
 
 User = get_user_model()
 
@@ -42,12 +43,15 @@ class MotherProfileSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
+    image= serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             "public_id",
             "email",
+            "username",
+            "image",
             "role",
             "is_active",
             "is_staff",
@@ -57,6 +61,22 @@ class UserSerializer(serializers.ModelSerializer):
             "profile",
         ]
 
+    def get_image(self, obj):
+        if not obj.image:
+            return None
+
+        image_path = str(obj.image)
+
+        try:
+
+            url, options = cloudinary.utils.cloudinary_url(
+                image_path, 
+                secure=True
+            )
+            return url
+        except Exception:
+            return None
+            
     def get_profile(self, obj):
         if obj.role == "mother":
             profile = getattr(obj, "mother_profile", None)
@@ -87,4 +107,21 @@ class RegisterSerializer(serializers.ModelSerializer):
             PartnerProfile.objects.create(user=user)
 
         return user
+
+class UpdateUserProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['email', 'username']
+
+class UpdateMotherProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MotherProfile
+        fields = ['baby_due_date','baby_birth_date']
+
+
+
+
+
 

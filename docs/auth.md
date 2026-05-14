@@ -95,7 +95,7 @@ Authenticate and receive JWT tokens for session management.
 }
 ```
 
----
+<!-- ---
 
 ## 4. Google Social Login
 
@@ -119,11 +119,11 @@ Authenticate using a Google ID token provided by the frontend integration.
   "refresh": "refresh_token_here",
   "status": 200
 }
-```
+``` -->
 
 ---
 
-## 5. Token Management
+## 4. Token Management
 
 ### Refresh Token
 
@@ -137,7 +137,7 @@ Generate a new access token when the current one expires.
 }
 ```
 
-### Logout
+### 5. Logout
 
 Blacklist the refresh token to end the session securely.
 
@@ -171,17 +171,29 @@ Authorization: Bearer <access_token>
 
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "email": "user@example.com",
-  "role": "mother",
-  "is_active": true,
-  "status": 200
+  "public_id": "9a8be513-245e-454a-972f-91d2436e658f",
+    "email": "test1@gmail.com",
+    "username": "test1",
+    "image": "https://res.cloudinary.com/deynddrmf/image/upload/v1/profile_pics/user_1",
+    "role": "mother",
+    "is_active": true,
+    "is_staff": false,
+    "is_superuser": false,
+    "joined_at": "2026-05-02T17:11:37.204474Z",
+    "updated_at": "2026-05-14T11:43:20.367781Z",
+    "profile": {
+        "public_id": "4244a0e8-7984-44e7-a706-8febc8641580",
+        "user": "9a8be513-245e-454a-972f-91d2436e658f",
+        "baby_due_date": "2026-12-25",
+        "baby_birth_date": "2026-12-24",
+        "partner": null
+    }
 }
 ```
 
 ---
 
-### Upload Profile Image
+### 7. Upload Profile Image
 
 Update the user's avatar. Images are stored and served via Cloudinary.
 
@@ -205,6 +217,8 @@ Update the user's avatar. Images are stored and served via Cloudinary.
 }
 ```
 
+---
+
 ## 7. Verify OTP
 
 Resend the otp back to the user.
@@ -224,6 +238,52 @@ Resend the otp back to the user.
 ```json
 {
   "detail": "If the email exists, a code has been sent.",
+}
+```
+
+---
+
+## 8. Update User Profile
+
+Update user profile by passing in email/username or both.
+
+**Endpoint:** `POST api/auth/v1/update/user/`
+
+### Request Body
+```json
+{
+  "email": "",
+  "username": ""
+}
+```
+
+### Response
+```json
+{
+  "detail": "User Profile updated successfully"
+}
+```
+
+---
+
+## 9. Update Mother Profile
+
+Update mother profile. 
+
+**Endpoint:** `POST api/auth/v1/update/mother/`
+
+### Request Body
+```json
+{
+  "baby_due_date": "2026-12-25",
+  "baby_birth_date": "2026-12-24",
+}
+```
+
+### Response
+```json
+{
+  "detail": "Mother Profile updated successfully"
 }
 ```
 

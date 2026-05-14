@@ -146,4 +146,13 @@ CELERY_BEAT_SCHEDULE = {
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'   
 
+import cloudinary
+
+cloudinary.config(
+    cloud_name=env("CLOUDINARY_CLOUD_NAME"),
+    api_key=env("CLOUDINARY_CLOUD_API_KEY"),
+    api_secret=env("CLOUDINARY_CLOUD_API_SECRET"),
+    secure=True
+)
+
 
