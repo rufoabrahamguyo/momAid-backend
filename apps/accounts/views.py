@@ -14,6 +14,7 @@ from rest_framework.throttling import ScopedRateThrottle, AnonRateThrottle
 from .serializers import RegisterSerializer, UserSerializer,UpdateMotherProfileSerializer,UpdateUserProfileSerializer
 from .helpers import generate_email_otp, verify_email_otp, verify_google_token, resend_otp
 from .throttle import CustomRegistrationThrottle
+from mumaid.utils.discord import send_error_to_discord
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -71,6 +72,13 @@ class ImageProfileUploaderView(APIView):
             return Response({"detail": "Profile updated.", "url": result.get("secure_url")}, status=200)
         except Exception as e:
             logger.error(f"Upload_Error: {str(e)}")
+
+            send_error_to_discord({
+                "Alert": "❌ Upload Key Failure",
+                "Message": f"Invalid API Key attempted: {api_key}",
+                "Exception": str(e)
+            })
+            
             return Response({"detail": "Failed to upload image."}, status=500)
 
 class UserProfileView(APIView):
