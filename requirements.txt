@@ -27,7 +27,7 @@ Pillow>=10.2.0
 # Security / utils
 django-cors-headers>=4.3.0
 django-ratelimit>=4.1.0
-requests>=2.33.1
+requests>=2.34.2
 
 # Deployment
 gunicorn>=21.2.0

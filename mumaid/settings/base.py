@@ -50,6 +50,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+"mumaid.middleware.error_middleware.ErrorHandlerMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -154,5 +155,6 @@ cloudinary.config(
     api_secret=env("CLOUDINARY_CLOUD_API_SECRET"),
     secure=True
 )
+
 
 
