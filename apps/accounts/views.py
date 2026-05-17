@@ -75,10 +75,10 @@ class ImageProfileUploaderView(APIView):
 
             send_error_to_discord({
                 "Alert": "❌ Upload Key Failure",
-                "Message": f"Invalid API Key attempted: {api_key}",
+                "Message": f"Invalid API Key attempted",
                 "Exception": str(e)
             })
-            
+
             return Response({"detail": "Failed to upload image."}, status=500)
 
 class UserProfileView(APIView):
