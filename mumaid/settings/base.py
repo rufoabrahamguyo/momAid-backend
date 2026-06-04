@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "apps.healthcare",
     "apps.notifications",
     "apps.feeds",
+    "apps.mumtalk",
 ]
 
 MIDDLEWARE = [
@@ -155,6 +156,5 @@ cloudinary.config(
     api_secret=env("CLOUDINARY_CLOUD_API_SECRET"),
     secure=True
 )
-
 
 
