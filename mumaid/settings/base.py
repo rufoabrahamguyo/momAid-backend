@@ -157,4 +157,6 @@ cloudinary.config(
     secure=True
 )
 
+ANONYMOUS_SALT = env("ANONYMOUS_SALT", default="default-anonymous-salt-change-me")
+
 
