@@ -91,7 +91,7 @@ Posts are ordered newest first by `created_at`.
 | `GET` | `api/mumtalk/v1/posts/<post_id>/` | Optional | Get one post by `public_id`. |
 | `DELETE` | `api/mumtalk/v1/posts/<post_id>/delete/` | Required | Delete one of the authenticated user's own posts. |
 | `GET` | `api/mumtalk/v1/posts/me/` | Required | Intended to list the authenticated user's own posts, but currently shadowed by the detail route. See note below. |
-| `PUT` | `api/mumtalk/v1/posts/<post_id>/update/` | Required | Update one of the authenticated user's own posts. Partial payloads are accepted. |
+| `PATCH` | `api/mumtalk/v1/posts/<post_id>/update/` | Required | Partially update one of the authenticated user's own posts. |
 
 Routing note:
 
@@ -353,7 +353,7 @@ Update one of the authenticated user's own posts.
 Endpoint:
 
 ```txt
-PUT api/mumtalk/v1/posts/<post_id>/update/
+PATCH api/mumtalk/v1/posts/<post_id>/update/
 ```
 
 Header:
@@ -449,3 +449,87 @@ X-MomAid-Retry-After: 42
 - For edit/delete ownership checks, the backend uses the authenticated user's salted hash. A user can only modify posts created under the same account.
 - `title` is currently unique globally. If the product does not want unique titles, the backend model will need to change.
 - Empty or missing `title` and `content` may pass serializer validation because both model fields allow `null` and `blank`. Frontend validation should enforce any stricter UX rules needed by the product.
+
+
+# Reply System (Updated)
+
+## Reply Structure
+
+Posts now include:
+
+```json
+{
+  "public_id": "...",
+  "title": "...",
+  "content": "...",
+  "reply_count": 2,
+  "replies": [
+    {
+      "public_id": "...",
+      "content": "Root reply",
+      "parent_reply": null,
+      "is_root_reply": true,
+      "children": [
+        {
+          "public_id": "...",
+          "content": "Nested reply",
+          "parent_reply": "...",
+          "is_root_reply": false,
+          "children": [],
+          "created_at": "2026-06-05T15:00:00Z"
+        }
+      ],
+      "created_at": "2026-06-05T14:50:00Z"
+    }
+  ]
+}
+```
+
+### Create Reply
+
+Endpoint:
+
+```txt
+POST api/mumtalk/v1/posts/<post_id>/replies/create/
+```
+
+Headers:
+
+```txt
+Authorization: Bearer <access_token>
+```
+
+Reply to a post:
+
+```json
+{
+  "content": "I understand how you feel."
+}
+```
+
+Reply to another reply:
+
+```json
+{
+  "content": "Thanks for sharing.",
+  "parent_id": "<reply_public_id>"
+}
+```
+
+Success:
+
+```json
+{
+  "reply": "Thanks for sharing.",
+  "posted_at": "2026-06-05T15:00:00Z"
+}
+```
+
+### Reply Rules
+
+- Replies support nested threading.
+- Maximum nesting depth is 5.
+- Empty replies are rejected.
+- Only root replies appear directly under `replies`.
+- Nested replies are returned recursively through `children`.
+- Reply ownership remains anonymous.

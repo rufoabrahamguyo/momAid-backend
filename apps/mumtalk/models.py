@@ -14,13 +14,44 @@ class BaseModel(models.Model):
         abstract = True
 
 
-class MumTalkPost(BaseModel):  
-    title = models.CharField(max_length=255, null=True, blank=True,unique=True)
-    content = models.TextField(null=True, blank=True, max_length=300)
-    author_hash = models.CharField(max_length=255, null=True, blank=True)
+class MumTalkPost(BaseModel):
+    title = models.CharField(max_length=255, unique=True, null=True, blank=True)       
+    content = models.TextField(max_length=300,null=True, blank=True)                
+    author_hash = models.CharField(max_length=64, db_index=True, null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
         return self.title
+
+    @property
+    def reply_count(self):
+        return self.replies.count()
+
+
+class MumTalkReply(BaseModel):
+    content = models.TextField(max_length=300)                 
+    author_replier_hash = models.CharField(max_length=64, db_index=True) 
+    post = models.ForeignKey(
+        MumTalkPost,
+        on_delete=models.CASCADE,
+        related_name='replies'                                 
+    )
+    parent_reply = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='children'                                
+    )
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Reply to {self.post.title}"
+
+    @property
+    def is_root_reply(self):
+        return self.parent_reply is None

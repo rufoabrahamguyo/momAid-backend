@@ -7,6 +7,7 @@ from .views import (
     MumTalkPostDeleteView, 
     MumTalkListUserPostsView,
     MumTalkPostUpdateView,
+    MumTalkReplyCreateView,
 )
 
 
@@ -17,5 +18,6 @@ urlpatterns = [
     path("v1/posts/<str:post_id>/delete/", MumTalkPostDeleteView.as_view(), name="mumtalk-post-delete"),
     path("v1/posts/me/", MumTalkListUserPostsView.as_view(), name="mumtalk-user-posts"),
     path("v1/posts/<str:post_id>/update/", MumTalkPostUpdateView.as_view(), name="mumtalk-post-update"),
+    path("v1/posts/<str:post_id>/replies/create/", MumTalkReplyCreateView.as_view(), name="mumtalk-reply-create"),
 ]
 
