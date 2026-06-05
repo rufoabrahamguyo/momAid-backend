@@ -31,7 +31,7 @@ class MomAidGlobalRateLimiter:
             tier = 'upload_limit'
         elif any(p in path for p in ['/healthcare/', '/partner/', '/milk/', '/opportunities/']):
             tier = 'auth_limit' 
-        elif any(p in path for p in ['/feeds/', '/remedies/', '/exercises/', '/v1/whoami/']):
+        elif any(p in path for p in ['/feeds/', '/remedies/', '/exercises/', '/v1/whoami/', '/mumtalk/']):
             tier = 'user' if request.user.is_authenticated else 'anon'
         else:
 

@@ -81,6 +81,7 @@ Detailed endpoint documentation is split into modules for scalability:
 * [Auth](./docs/auth.md)
 * [Feeds](./docs/feeds.md)
 * [Partner](./docs/partner.md)
+* [Mumtalk](./docs/mumtalk.md)
 ---
 
 ## 📦 Request & Response Format

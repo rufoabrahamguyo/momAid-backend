@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "apps.healthcare",
     "apps.notifications",
     "apps.feeds",
+    "apps.mumtalk",
 ]
 
 MIDDLEWARE = [
@@ -156,5 +157,6 @@ cloudinary.config(
     secure=True
 )
 
+ANONYMOUS_SALT = env("ANONYMOUS_SALT", default="default-anonymous-salt-change-me")
 
 
