@@ -30,12 +30,6 @@ def send_otp_email(recipient_email, otp):
 
 
 
-@shared_task
-def cleanup_stale_data():
-    limit = timezone.now() - timedelta(hours=48)
-    deleted_users,_ = User.objects.filter(is_active=False, joined_at__lte=limit).delete()
-    OutstandingToken.objects.filter(expires_at__lte=timezone.now()).delete()
-    return f"Purged {deleted_users} inactive users and cleared expired tokens."
 
 
 

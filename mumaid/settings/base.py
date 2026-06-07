@@ -137,13 +137,6 @@ LOGGING = {
     },
 }
 
-CELERY_BEAT_SCHEDULE = {
-    'daily-db-cleanup': {
-        'task': 'apps.accounts.tasks.cleanup_stale_data',
-        'schedule': 86400.0, 
-    },
-}
-
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'   
