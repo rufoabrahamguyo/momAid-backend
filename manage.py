@@ -6,7 +6,8 @@ import sys
 
 def main() -> None:
     """Run administrative tasks."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mumaid.settings")
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "api"))
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mumaid.settings.dev")
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

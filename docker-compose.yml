@@ -1,4 +1,5 @@
 services:
+
   db:
     image: postgres:15-alpine
     environment:
@@ -7,21 +8,91 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5433:5432"
-    env_file:
-      - .env
-    restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
     ports:
       - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app                        
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=mumaid.settings.dev
+      - PYTHONPATH=/app/api
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    command: celery -A mumaid worker --loglevel=info --concurrency=2 -Q default,notifications,emails
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=mumaid.settings.dev
+      - PYTHONPATH=/app/api
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  beat:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    command: celery -A mumaid beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=mumaid.settings.dev
+      - PYTHONPATH=/app/api
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"   
+      - "1025:1025"  
 
   adminer:
     image: adminer:latest
@@ -29,37 +100,6 @@ services:
       - "8080:8080"
     depends_on:
       - db
-
-
-  mailpit:
-    image: axllent/mailpit:latest
-    ports:
-      - "8025:8025"
-      - "1025:1025"
-
-  server:
-    build: .
-    depends_on:
-      db:
-        condition: service_healthy
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    volumes:
-      - .:/app
-    
-
-  celery:
-    build: .
-    command: celery -A mumaid worker --loglevel=info
-    depends_on:
-      - redis
-      - db
-    env_file:
-      - .env
-    volumes:
-      - .:/app
 
 volumes:
   postgres_data:
