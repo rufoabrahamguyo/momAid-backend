@@ -1,0 +1,42 @@
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=mumaid.settings.prod
+      - GUNICORN_WORKERS=2
+      - GUNICORN_THREADS=1
+    restart: always
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    command: ./start-worker.sh
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=mumaid.settings.prod
+      - CELERY_CONCURRENCY=4
+    restart: always
+
+  beat:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    command: ./start-beat.sh
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=mumaid.settings.prod
+    restart: always
+
+
+volumes:
+  postgres_data:

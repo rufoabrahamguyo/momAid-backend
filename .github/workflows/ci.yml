@@ -1,0 +1,93 @@
+name: "Continuous Integration"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main"]
+
+jobs:
+  lint:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Linting Tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black isort
+
+      - name: Run Black Code Formatting Check
+        run: black --check api core manage.py
+
+      - name: Run Isort Import Order Check
+        run: isort --check-only api core manage.py
+
+      - name: Run Flake8 Style Guide Linting
+        run: flake8 api core manage.py --count --select=E9,F63,F7,F82 --show-source --statistics
+
+  test:
+    name: Build & Execute Test Suite
+    needs: lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Create Mock Environment File
+        run: |
+          echo "SECRET_KEY=ci-test-fake-key-generation-string-12345" >> .env
+          echo "CLOUDINARY_CLOUD_NAME=mock_name" >> .env
+          echo "CLOUDINARY_CLOUD_API_KEY=mock_key" >> .env
+          echo "CLOUDINARY_CLOUD_API_SECRET=mock_secret" >> .env
+          echo "ANONYMOUS_SALT=mock_salt" >> .env
+
+      - name: Set up Docker Buildx Cache
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker Layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build Application Containers via Docker Compose
+        run: |
+          docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 api
+
+      - name: Bring Up Database Dependencies & Containers
+        run: |
+          docker compose up -d
+
+      - name: Wait for Services to Initialize
+        run: sleep 5
+
+      - name: Run Test Suite Inside Container Environment
+        run: |
+          docker compose exec -T api pytest
+
+      - name: Teardown Testing Container Lifecycle
+        if: always()
+        run: docker compose down -v
+
+  deploy:
+      name: Trigger Deployment to Render
+      needs: test 
+      if: github.ref == 'refs/heads/main'  
+      runs-on: ubuntu-latest
+      
+      steps:
+        - name: Trigger Render Deploy Webhook
+          run: |
+            curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
