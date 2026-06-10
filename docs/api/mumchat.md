@@ -1,11 +1,11 @@
-# MumTalk API
+# MumChat API
 
-MumTalk is the anonymous community posting feature. A signed-in user can create posts, and the backend stores ownership as a salted `author_hash` instead of exposing the user record. Frontend clients never receive `author_hash`, user id, email, username, or profile data from MumTalk responses.
+MumChat is the anonymous community posting feature. A signed-in user can create posts, and the backend stores ownership as a salted `author_hash` instead of exposing the user record. Frontend clients never receive `author_hash`, user id, email, username, or profile data from MumTalk responses.
 
 Base path:
 
 ```txt
-api/mumtalk/
+api/mumchat/
 ```
 
 Authentication uses the normal JWT header for protected endpoints:
@@ -16,7 +16,7 @@ Authorization: Bearer <access_token>
 
 ## Data Model
 
-A MumTalk post returned to the frontend has this shape:
+A MumChat post returned to the frontend has this shape:
 
 ```json
 {
@@ -43,7 +43,7 @@ Important current constraints:
 - The create/update serializer accepts only `title` and `content` from the frontend.
 - `public_id`, `created_at`, and `updated_at` are read-only.
 - `author_hash` is backend-only and is never returned.
-- There are no likes, comments, categories, images, author display names, or search filters in the current MumTalk API.
+- There are no likes, comments, categories, images, author display names, or search filters in the current MumChat API.
 
 ## Pagination
 
@@ -86,16 +86,16 @@ Posts are ordered newest first by `created_at`.
 
 | Method | Path | Auth | Current behavior |
 | --- | --- | --- | --- |
-| `GET` | `api/mumtalk/v1/posts/` | Optional | List all MumTalk posts, newest first, paginated. |
-| `POST` | `api/mumtalk/v1/posts/create/` | Required | Create a post for the authenticated user. |
-| `GET` | `api/mumtalk/v1/posts/<post_id>/` | Optional | Get one post by `public_id`. |
-| `DELETE` | `api/mumtalk/v1/posts/<post_id>/delete/` | Required | Delete one of the authenticated user's own posts. |
-| `GET` | `api/mumtalk/v1/posts/me/` | Required | Intended to list the authenticated user's own posts, but currently shadowed by the detail route. See note below. |
-| `PATCH` | `api/mumtalk/v1/posts/<post_id>/update/` | Required | Partially update one of the authenticated user's own posts. |
+| `GET` | `api/mumchat/v1/posts/` | Optional | List all MumTalk posts, newest first, paginated. |
+| `POST` | `api/mumchat/v1/posts/create/` | Required | Create a post for the authenticated user. |
+| `GET` | `api/mumchat/v1/posts/<post_id>/` | Optional | Get one post by `public_id`. |
+| `DELETE` | `api/mumchat/v1/posts/<post_id>/delete/` | Required | Delete one of the authenticated user's own posts. |
+| `GET` | `api/mumchat/v1/posts/me/` | Required | Intended to list the authenticated user's own posts, but currently shadowed by the detail route. See note below. |
+| `PATCH` | `api/mumchat/v1/posts/<post_id>/update/` | Required | Partially update one of the authenticated user's own posts. |
 
 Routing note:
 
-`api/mumtalk/v1/posts/me/` is currently declared after `api/mumtalk/v1/posts/<post_id>/`. Because of that order, Django matches `me` as `<post_id>` first. So a frontend call to `GET api/mumtalk/v1/posts/me/` currently behaves like a detail lookup for a post whose `public_id` is `"me"` and will normally return:
+`api/mumchat/v1/posts/me/` is currently declared after `api/mumchat/v1/posts/<post_id>/`. Because of that order, Django matches `me` as `<post_id>` first. So a frontend call to `GET api/mumchat/v1/posts/me/` currently behaves like a detail lookup for a post whose `public_id` is `"me"` and will normally return:
 
 ```json
 {
@@ -103,16 +103,16 @@ Routing note:
 }
 ```
 
-Until the route order changes, do not rely on `api/mumtalk/v1/posts/me/` for "my posts" in frontend flows.
+Until the route order changes, do not rely on `api/mumchat/v1/posts/me/` for "my posts" in frontend flows.
 
 ## 1. List All Posts
 
-Retrieve all MumTalk posts across the platform.
+Retrieve all MumChat posts across the platform.
 
 Endpoint:
 
 ```txt
-GET api/mumtalk/v1/posts/
+GET api/mumchat/v1/posts/
 ```
 
 Auth:
@@ -124,8 +124,8 @@ Optional
 Query examples:
 
 ```txt
-GET api/mumtalk/v1/posts/?page=1
-GET api/mumtalk/v1/posts/?page=2&page_size=10
+GET api/mumchat/v1/posts/?page=1
+GET api/mumchat/v1/posts/?page=2&page_size=10
 ```
 
 Success response: `200 OK`
@@ -162,12 +162,12 @@ Frontend expectations:
 
 ## 2. Create Post
 
-Create a new anonymous MumTalk post for the authenticated user.
+Create a new anonymous MumChat post for the authenticated user.
 
 Endpoint:
 
 ```txt
-POST api/mumtalk/v1/posts/create/
+POST api/mumchat/v1/posts/create/
 ```
 
 Header:
@@ -215,19 +215,19 @@ Possible errors:
 ```json
 {
   "title": [
-    "mum talk post with this title already exists."
+    "mum chat post with this title already exists."
   ]
 }
 ```
 
 ## 3. Get Post Detail
 
-Fetch one MumTalk post by its `public_id`.
+Fetch one MumChat post by its `public_id`.
 
 Endpoint:
 
 ```txt
-GET api/mumtalk/v1/posts/<post_id>/
+GET api/mumchat/v1/posts/<post_id>/
 ```
 
 Auth:
@@ -239,7 +239,7 @@ Optional
 Example:
 
 ```txt
-GET api/mumtalk/v1/posts/1cfa39e2-7f25-4e71-91e2-b9b4f8c71f57/
+GET api/mumchat/v1/posts/1cfa39e2-7f25-4e71-91e2-b9b4f8c71f57/
 ```
 
 Success response: `200 OK`
@@ -274,7 +274,7 @@ Delete one of the authenticated user's own posts.
 Endpoint:
 
 ```txt
-DELETE api/mumtalk/v1/posts/<post_id>/delete/
+DELETE api/mumchat/v1/posts/<post_id>/delete/
 ```
 
 Header:
@@ -309,7 +309,7 @@ Intended endpoint for listing posts created by the authenticated user.
 Endpoint:
 
 ```txt
-GET api/mumtalk/v1/posts/me/
+GET api/mumchat/v1/posts/me/
 ```
 
 Header:
@@ -344,7 +344,7 @@ Because of route ordering, this path is currently shadowed by the detail route a
 Frontend expectations:
 
 - Treat this endpoint as unavailable until the backend route order is fixed.
-- There is currently no owner marker in the public feed response, so the frontend cannot reliably infer "my posts" from `GET api/mumtalk/v1/posts/`.
+- There is currently no owner marker in the public feed response, so the frontend cannot reliably infer "my posts" from `GET api/mumchat/v1/posts/`.
 
 ## 6. Update Post
 
@@ -353,7 +353,7 @@ Update one of the authenticated user's own posts.
 Endpoint:
 
 ```txt
-PATCH api/mumtalk/v1/posts/<post_id>/update/
+PATCH api/mumchat/v1/posts/<post_id>/update/
 ```
 
 Header:
@@ -413,7 +413,7 @@ Frontend expectations:
 
 ## Rate Limit Headers
 
-MumTalk paths are handled by the global rate limiter. Successful responses may include:
+MumChat paths are handled by the global rate limiter. Successful responses may include:
 
 ```txt
 X-MomAid-Tier: anon
@@ -423,8 +423,8 @@ X-MomAid-Remaining: 59
 
 The tier is usually:
 
-- `anon` for unauthenticated MumTalk requests.
-- `user` for authenticated MumTalk requests.
+- `anon` for unauthenticated MumChat requests.
+- `user` for authenticated MumChat requests.
 
 Rate limit response: `429 Too Many Requests`
 
@@ -490,7 +490,7 @@ Posts now include:
 Endpoint:
 
 ```txt
-POST api/mumtalk/v1/posts/<post_id>/replies/create/
+POST api/mumchat/v1/posts/<post_id>/replies/create/
 ```
 
 Headers:

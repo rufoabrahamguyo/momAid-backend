@@ -53,7 +53,7 @@ LOCAL_APPS = [
     "apps.partner",
     "apps.healthcare",
     "apps.feeds",
-    "apps.mumtalk",
+    "apps.mumchat",
     "apps.welcome",
 ]
 
@@ -160,9 +160,8 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=120),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    "ROTATE_REFRESH_TOKENS": False,
-    "BLACKLIST_AFTER_ROTATION": False,
-    "AUTH_HEADER_TYPES": ("Bearer",),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
     "SIGNING_KEY": SECRET_KEY,
 }
 

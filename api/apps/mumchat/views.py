@@ -6,56 +6,56 @@ from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
-from .models import MumTalkPost, MumTalkReply
-from .serializers import MumTalkCreateReplySerializer, MumTalkPostSerializer
+from .models import MumChatPost, MumChatReply
+from .serializers import MumChatCreateReplySerializer, MumChatPostSerializer
 
 
-class MumTalkPagination(PageNumberPagination):
+class MumChatPagination(PageNumberPagination):
     page_size = 20
     page_size_query_param = "page_size"
     max_page_size = 100
 
 
-class MumTalkPostCreateView(APIView):
+class MumChatPostCreateView(APIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
     def post(self, request):
         author_hash = hash_user_identity(request.user.id)
-        serializer = MumTalkPostSerializer(data=request.data)
+        serializer = MumChatPostSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save(author_hash=author_hash)
             return Response({"detail": "Post created successfully."}, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MumTalkPostListView(APIView):
+class MumChatPostListView(APIView):
 
     def get(self, request):
-        posts = MumTalkPost.objects.all()
-        paginator = MumTalkPagination()
+        posts = MumChatPost.objects.all()
+        paginator = MumChatPagination()
         page = paginator.paginate_queryset(posts, request)
-        serializer = MumTalkPostSerializer(page, many=True)
+        serializer = MumChatPostSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
 
-class MumTalkPostDetailView(APIView):
+class MumChatPostDetailView(APIView):
 
     def get(self, request, post_id):
-        post = get_object_or_404(MumTalkPost, public_id=post_id)
-        serializer = MumTalkPostSerializer(post)
+        post = get_object_or_404(MumChatPost, public_id=post_id)
+        serializer = MumChatPostSerializer(post)
         return Response(serializer.data, status=200)
 
 
-class MumTalkPostUpdateView(APIView):
+class MumChatPostUpdateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, post_id):
         author_hash = hash_user_identity(request.user.id)
         post = get_object_or_404(
-            MumTalkPost, public_id=post_id, author_hash=author_hash
+            MumChatPost, public_id=post_id, author_hash=author_hash
         )
-        serializer = MumTalkPostSerializer(
+        serializer = MumChatPostSerializer(
             instance=post, data=request.data, partial=True
         )
         if serializer.is_valid(raise_exception=True):
@@ -64,31 +64,31 @@ class MumTalkPostUpdateView(APIView):
         return Response(serializer.errors, status=400)
 
 
-class MumTalkPostDeleteView(APIView):
+class MumChatPostDeleteView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, post_id):
         author_hash = hash_user_identity(request.user.id)
         post = get_object_or_404(
-            MumTalkPost, public_id=post_id, author_hash=author_hash
+            MumChatPost, public_id=post_id, author_hash=author_hash
         )
         post.delete()
         return Response(status=204)
 
 
-class MumTalkListUserPostsView(APIView):
+class MumChatListUserPostsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         author_hash = hash_user_identity(request.user.id)
-        posts = MumTalkPost.objects.filter(author_hash=author_hash)
-        paginator = MumTalkPagination()
+        posts = MumChatPost.objects.filter(author_hash=author_hash)
+        paginator = MumChatPagination()
         page = paginator.paginate_queryset(posts, request)
-        serializer = MumTalkPostSerializer(page, many=True)
+        serializer = MumChatPostSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
 
-class MumTalkReplyCreateView(APIView):
+class MumChatReplyCreateView(APIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
     MAX_REPLY_DEPTH = 5
@@ -105,14 +105,14 @@ class MumTalkReplyCreateView(APIView):
 
     def post(self, request, post_id):
         author_replier_hash = hash_user_identity(request.user.id)
-        parent_post = get_object_or_404(MumTalkPost, public_id=post_id)
+        parent_post = get_object_or_404(MumChatPost, public_id=post_id)
 
         parent_reply = None
         parent_id = request.data.get("parent_id")
 
         if parent_id:
             parent_reply = get_object_or_404(
-                MumTalkReply, public_id=parent_id, post=parent_post
+                MumChatReply, public_id=parent_id, post=parent_post
             )
             if self.get_reply_depth(parent_reply) >= self.MAX_REPLY_DEPTH:
                 return Response(
@@ -122,7 +122,7 @@ class MumTalkReplyCreateView(APIView):
                     status=400,
                 )
 
-        serializer = MumTalkCreateReplySerializer(data=request.data)
+        serializer = MumChatCreateReplySerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             reply = serializer.save(
                 author_replier_hash=author_replier_hash,

@@ -1,7 +1,7 @@
 name: Auto PR
 
 on:
-  push:
+  pus:
     branches-ignore: ["main"]
 
 jobs:
