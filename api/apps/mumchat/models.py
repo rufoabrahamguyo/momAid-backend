@@ -15,7 +15,7 @@ class BaseModel(models.Model):
         abstract = True
 
 
-class MumTalkPost(BaseModel):
+class MumChatPost(BaseModel):
     title = models.CharField(max_length=255, unique=True, null=True, blank=True)
     content = models.TextField(max_length=300, null=True, blank=True)
     author_hash = models.CharField(max_length=64, db_index=True, null=True, blank=True)
@@ -24,18 +24,18 @@ class MumTalkPost(BaseModel):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return self.title
+        return self.title or f"Post {self.public_id}"
 
     @property
     def reply_count(self):
         return self.replies.count()
 
 
-class MumTalkReply(BaseModel):
+class MumChatReply(BaseModel):
     content = models.TextField(max_length=300)
     author_replier_hash = models.CharField(max_length=64, db_index=True)
     post = models.ForeignKey(
-        MumTalkPost, on_delete=models.CASCADE, related_name="replies"
+        MumChatPost, on_delete=models.CASCADE, related_name="replies"
     )
     parent_reply = models.ForeignKey(
         "self", null=True, blank=True, on_delete=models.CASCADE, related_name="children"
