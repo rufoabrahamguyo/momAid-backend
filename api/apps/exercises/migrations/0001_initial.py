@@ -7,23 +7,30 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Exercise',
+            name="Exercise",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=100)),
-                ('description', models.TextField()),
-                ('video_url', models.URLField()),
-                ('thumbnail_url', models.URLField(blank=True)),
-                ('duration_seconds', models.IntegerField(default=120)),
-                ('order', models.IntegerField(default=0)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=100)),
+                ("description", models.TextField()),
+                ("video_url", models.URLField()),
+                ("thumbnail_url", models.URLField(blank=True)),
+                ("duration_seconds", models.IntegerField(default=120)),
+                ("order", models.IntegerField(default=0)),
             ],
             options={
-                'ordering': ['order', 'id'],
+                "ordering": ["order", "id"],
             },
         ),
     ]

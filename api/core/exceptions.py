@@ -1,6 +1,9 @@
 import logging
 
-from django.core.exceptions import PermissionDenied, ValidationError as DjangoValidationError
+from django.core.exceptions import (
+    PermissionDenied,
+    ValidationError as DjangoValidationError,
+)
 from django.http import Http404
 
 from rest_framework import status
@@ -13,14 +16,12 @@ logger = logging.getLogger(__name__)
 
 def momaid_exception_handler(exc, context):
 
-
     if isinstance(exc, Http404):
         exc = _drf_exc("Not found.", status.HTTP_404_NOT_FOUND)
     elif isinstance(exc, PermissionDenied):
         exc = _drf_exc("Permission denied.", status.HTTP_403_FORBIDDEN)
     elif isinstance(exc, DjangoValidationError):
         exc = _drf_exc(exc.message, status.HTTP_400_BAD_REQUEST)
-
 
     response = exception_handler(exc, context)
 
@@ -50,8 +51,10 @@ def momaid_exception_handler(exc, context):
     response.data = _error_body(message, errors)
     return response
 
+
 class MomAidException(APIException):
     """Base for all Momaid domain exceptions."""
+
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "An error occurred."
 
@@ -64,7 +67,6 @@ class ConflictError(MomAidException):
 class ServiceUnavailable(MomAidException):
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     default_detail = "Service temporarily unavailable."
-
 
 
 def _drf_exc(detail: str, status_code: int) -> APIException:

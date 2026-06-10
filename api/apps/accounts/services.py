@@ -15,8 +15,8 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
-OTP_TTL     = 600   
-OTP_DIGITS  = 6
+OTP_TTL = 600
+OTP_DIGITS = 6
 
 
 def _otp_cache_key(email: str) -> str:
@@ -67,8 +67,6 @@ def register_user(*, email: str, password: str, role: str) -> User:
     return user
 
 
-
-
 def activate_user(*, email: str, otp: str) -> tuple[User, dict]:
     """
     Verify OTP, activate user, return user + JWT tokens.
@@ -85,15 +83,12 @@ def activate_user(*, email: str, otp: str) -> tuple[User, dict]:
     return user, _make_tokens(user)
 
 
-
-
 def logout_user(*, refresh_token: str) -> None:
     """Blacklist the refresh token. Raises TokenError on invalid token."""
     from rest_framework_simplejwt.tokens import RefreshToken
+
     token = RefreshToken(refresh_token)
     token.blacklist()
-
-
 
 
 @transaction.atomic
@@ -147,9 +142,8 @@ def update_mother_profile(*, user: User, data: dict) -> MotherProfile:
     return profile
 
 
-
-MAX_UPLOAD_SIZE  = 5 * 1024 * 1024   # 5 MB
-ALLOWED_TYPES    = {"image/jpeg", "image/png", "image/jpg"}
+MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
+ALLOWED_TYPES = {"image/jpeg", "image/png", "image/jpg"}
 
 
 def upload_profile_image(*, user: User, file) -> str:
@@ -172,7 +166,6 @@ def upload_profile_image(*, user: User, file) -> str:
     user.image = result["public_id"]
     user.save(update_fields=["image"])
     return result["secure_url"]
-
 
 
 def _make_tokens(user: User) -> dict:

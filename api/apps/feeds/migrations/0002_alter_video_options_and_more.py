@@ -8,55 +8,71 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('feeds', '0001_initial'),
+        ("feeds", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='video',
-            options={'ordering': ['-created_at']},
+            name="video",
+            options={"ordering": ["-created_at"]},
         ),
         migrations.RemoveField(
-            model_name='videoattributes',
-            name='created_at',
+            model_name="videoattributes",
+            name="created_at",
         ),
         migrations.RemoveField(
-            model_name='videoattributes',
-            name='updated_at',
+            model_name="videoattributes",
+            name="updated_at",
         ),
         migrations.AddField(
-            model_name='comment',
-            name='public_id',
-            field=models.UUIDField(blank=True, default=uuid.uuid4, editable=False, null=True),
+            model_name="comment",
+            name="public_id",
+            field=models.UUIDField(
+                blank=True, default=uuid.uuid4, editable=False, null=True
+            ),
         ),
         migrations.AddField(
-            model_name='video',
-            name='created_at',
+            model_name="video",
+            name="created_at",
             field=models.DateTimeField(auto_now_add=True, db_index=True, null=True),
         ),
         migrations.AddField(
-            model_name='video',
-            name='public_id',
-            field=models.UUIDField(blank=True, default=uuid.uuid4, editable=False, null=True),
+            model_name="video",
+            name="public_id",
+            field=models.UUIDField(
+                blank=True, default=uuid.uuid4, editable=False, null=True
+            ),
         ),
         migrations.AddField(
-            model_name='video',
-            name='updated_at',
+            model_name="video",
+            name="updated_at",
             field=models.DateTimeField(auto_now=True),
         ),
         migrations.AddField(
-            model_name='videoattributes',
-            name='public_id',
-            field=models.UUIDField(blank=True, default=uuid.uuid4, editable=False, null=True),
+            model_name="videoattributes",
+            name="public_id",
+            field=models.UUIDField(
+                blank=True, default=uuid.uuid4, editable=False, null=True
+            ),
         ),
         migrations.AlterField(
-            model_name='comment',
-            name='video',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='feeds.video'),
+            model_name="comment",
+            name="video",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="comments",
+                to="feeds.video",
+            ),
         ),
         migrations.AlterField(
-            model_name='video',
-            name='attributes',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='video_instance', to='feeds.videoattributes'),
+            model_name="video",
+            name="attributes",
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="video_instance",
+                to="feeds.videoattributes",
+            ),
         ),
     ]

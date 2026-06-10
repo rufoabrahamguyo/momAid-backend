@@ -9,7 +9,10 @@ from rest_framework.response import Response
 
 from core.renderers import haversine_distance_km
 from apps.milk_support.models import MilkListing
-from apps.milk_support.serializers import MilkListingCreateSerializer, MilkListingSerializer
+from apps.milk_support.serializers import (
+    MilkListingCreateSerializer,
+    MilkListingSerializer,
+)
 
 
 class MilkListingListCreateView(generics.ListCreateAPIView):
@@ -40,7 +43,10 @@ class MilkListingListCreateView(generics.ListCreateAPIView):
             radius_f = float(radius)
         except (TypeError, ValueError):
             return Response(
-                {"error": "Invalid lat, lng, or radius_km.", "detail": "Invalid lat, lng, or radius_km."},
+                {
+                    "error": "Invalid lat, lng, or radius_km.",
+                    "detail": "Invalid lat, lng, or radius_km.",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         nearby = []

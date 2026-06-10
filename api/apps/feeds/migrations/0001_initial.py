@@ -16,38 +16,114 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='VideoAttributes',
+            name="VideoAttributes",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(db_index=True, max_length=50)),
-                ('description', models.TextField()),
-                ('duration', models.FloatField(blank=True, help_text='Duration in seconds', null=True)),
-                ('size', models.IntegerField(blank=True, help_text='Size in bytes', null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(db_index=True, max_length=50)),
+                ("description", models.TextField()),
+                (
+                    "duration",
+                    models.FloatField(
+                        blank=True, help_text="Duration in seconds", null=True
+                    ),
+                ),
+                (
+                    "size",
+                    models.IntegerField(
+                        blank=True, help_text="Size in bytes", null=True
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Video',
+            name="Video",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('video_file', cloudinary.models.CloudinaryField(blank=True, max_length=255, null=True, verbose_name='video')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='videos', to=settings.AUTH_USER_MODEL)),
-                ('attributes', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='video', to='feeds.videoattributes')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "video_file",
+                    cloudinary.models.CloudinaryField(
+                        blank=True, max_length=255, null=True, verbose_name="video"
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="videos",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "attributes",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="video",
+                        to="feeds.videoattributes",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Comment',
+            name="Comment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('content', models.TextField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('parent', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='replies', to='feeds.comment')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comments', to=settings.AUTH_USER_MODEL)),
-                ('video', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='feeds.video')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("content", models.TextField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "parent",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="replies",
+                        to="feeds.comment",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="comments",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "video",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="comments",
+                        to="feeds.video",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
     ]

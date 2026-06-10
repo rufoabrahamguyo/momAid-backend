@@ -1,5 +1,3 @@
-
-
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 
@@ -25,7 +23,11 @@ def user_exists(*, email: str) -> bool:
 
 
 def get_mother_profile(*, user: User) -> MotherProfile | None:
-    return MotherProfile.objects.select_related("user", "partner__user").filter(user=user).first()
+    return (
+        MotherProfile.objects.select_related("user", "partner__user")
+        .filter(user=user)
+        .first()
+    )
 
 
 def get_partner_profile(*, user: User) -> PartnerProfile | None:

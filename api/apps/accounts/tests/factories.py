@@ -44,7 +44,7 @@ class InactiveUserFactory(UserFactory):
 class MotherProfileFactory(DjangoModelFactory):
     class Meta:
         model = MotherProfile
-        django_get_or_create = ('user',)
+        django_get_or_create = ("user",)
 
     user = factory.SubFactory(UserFactory, role=User.Role.MOTHER)
     baby_due_date = factory.Faker("future_date", end_date="+280d")
@@ -54,6 +54,6 @@ class MotherProfileFactory(DjangoModelFactory):
 class PartnerProfileFactory(DjangoModelFactory):
     class Meta:
         model = PartnerProfile
-        django_get_or_create = ('user',)
+        django_get_or_create = ("user",)
 
     user = factory.SubFactory(UserFactory, role=User.Role.PARTNER)

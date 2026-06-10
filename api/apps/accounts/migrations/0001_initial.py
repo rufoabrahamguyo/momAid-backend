@@ -12,55 +12,162 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('auth', '0012_alter_user_first_name_max_length'),
+        ("auth", "0012_alter_user_first_name_max_length"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='User',
+            name="User",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('password', models.CharField(max_length=128, verbose_name='password')),
-                ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
-                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
-                ('public_id', models.UUIDField(blank=True, default=uuid.uuid4, editable=False, null=True)),
-                ('email', models.EmailField(db_index=True, max_length=50, unique=True)),
-                ('role', models.CharField(choices=[('mother', 'MOTHER'), ('partner', 'PARTNER')], default='mother', max_length=20)),
-                ('is_staff', models.BooleanField(default=False)),
-                ('is_active', models.BooleanField(default=True)),
-                ('image', cloudinary.models.CloudinaryField(blank=True, max_length=255, null=True)),
-                ('joined_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups')),
-                ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.permission', verbose_name='user permissions')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("password", models.CharField(max_length=128, verbose_name="password")),
+                (
+                    "last_login",
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="last login"
+                    ),
+                ),
+                (
+                    "is_superuser",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Designates that this user has all permissions without explicitly assigning them.",
+                        verbose_name="superuser status",
+                    ),
+                ),
+                (
+                    "public_id",
+                    models.UUIDField(
+                        blank=True, default=uuid.uuid4, editable=False, null=True
+                    ),
+                ),
+                ("email", models.EmailField(db_index=True, max_length=50, unique=True)),
+                (
+                    "role",
+                    models.CharField(
+                        choices=[("mother", "MOTHER"), ("partner", "PARTNER")],
+                        default="mother",
+                        max_length=20,
+                    ),
+                ),
+                ("is_staff", models.BooleanField(default=False)),
+                ("is_active", models.BooleanField(default=True)),
+                (
+                    "image",
+                    cloudinary.models.CloudinaryField(
+                        blank=True, max_length=255, null=True
+                    ),
+                ),
+                ("joined_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "groups",
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text="The groups this user belongs to. A user will get all permissions granted to each of their groups.",
+                        related_name="user_set",
+                        related_query_name="user",
+                        to="auth.group",
+                        verbose_name="groups",
+                    ),
+                ),
+                (
+                    "user_permissions",
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text="Specific permissions for this user.",
+                        related_name="user_set",
+                        related_query_name="user",
+                        to="auth.permission",
+                        verbose_name="user permissions",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='PartnerProfile',
+            name="PartnerProfile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('public_id', models.UUIDField(blank=True, default=uuid.uuid4, editable=False, null=True)),
-                ('user', models.OneToOneField(limit_choices_to={'role': 'partner'}, on_delete=django.db.models.deletion.CASCADE, related_name='partner_profile', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "public_id",
+                    models.UUIDField(
+                        blank=True, default=uuid.uuid4, editable=False, null=True
+                    ),
+                ),
+                (
+                    "user",
+                    models.OneToOneField(
+                        limit_choices_to={"role": "partner"},
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="partner_profile",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='MotherProfile',
+            name="MotherProfile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('public_id', models.UUIDField(blank=True, default=uuid.uuid4, editable=False, null=True)),
-                ('baby_due_date', models.DateField(blank=True, null=True)),
-                ('baby_birth_date', models.DateField(blank=True, null=True)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='mother_profile', to=settings.AUTH_USER_MODEL)),
-                ('partner', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='linked_mother', to='accounts.partnerprofile')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "public_id",
+                    models.UUIDField(
+                        blank=True, default=uuid.uuid4, editable=False, null=True
+                    ),
+                ),
+                ("baby_due_date", models.DateField(blank=True, null=True)),
+                ("baby_birth_date", models.DateField(blank=True, null=True)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="mother_profile",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "partner",
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="linked_mother",
+                        to="accounts.partnerprofile",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]

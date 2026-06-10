@@ -8,29 +8,56 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('mumtalk', '0003_remove_mumtalkpost_author_mumtalkpost_author_hash_and_more'),
+        ("mumtalk", "0003_remove_mumtalkpost_author_mumtalkpost_author_hash_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='mumtalkpost',
-            name='author_hash',
+            model_name="mumtalkpost",
+            name="author_hash",
             field=models.CharField(blank=True, db_index=True, max_length=64, null=True),
         ),
         migrations.CreateModel(
-            name='MumTalkReply',
+            name="MumTalkReply",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('public_id', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('content', models.TextField(max_length=300)),
-                ('author_replier_hash', models.CharField(db_index=True, max_length=64)),
-                ('parent_reply', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='children', to='mumtalk.mumtalkreply')),
-                ('post', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='replies', to='mumtalk.mumtalkpost')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "public_id",
+                    models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("content", models.TextField(max_length=300)),
+                ("author_replier_hash", models.CharField(db_index=True, max_length=64)),
+                (
+                    "parent_reply",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="children",
+                        to="mumtalk.mumtalkreply",
+                    ),
+                ),
+                (
+                    "post",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="replies",
+                        to="mumtalk.mumtalkpost",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['created_at'],
+                "ordering": ["created_at"],
             },
         ),
     ]

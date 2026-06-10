@@ -9,30 +9,59 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('feeds', '0003_alter_video_video_file'),
+        ("feeds", "0003_alter_video_video_file"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='videoattributes',
-            name='duration',
-            field=models.FloatField(blank=True, default=0.0, help_text='Duration in seconds', null=True),
+            model_name="videoattributes",
+            name="duration",
+            field=models.FloatField(
+                blank=True, default=0.0, help_text="Duration in seconds", null=True
+            ),
         ),
         migrations.CreateModel(
-            name='VideoHistory',
+            name="VideoHistory",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('public_id', models.UUIDField(blank=True, default=uuid.uuid4, editable=False, null=True)),
-                ('last_watched_at', models.FloatField(default=0.0)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='users_history', to=settings.AUTH_USER_MODEL)),
-                ('video', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='watched_history', to='feeds.video')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "public_id",
+                    models.UUIDField(
+                        blank=True, default=uuid.uuid4, editable=False, null=True
+                    ),
+                ),
+                ("last_watched_at", models.FloatField(default=0.0)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="users_history",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "video",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="watched_history",
+                        to="feeds.video",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-updated_at'],
-                'unique_together': {('video', 'user')},
+                "ordering": ["-updated_at"],
+                "unique_together": {("video", "user")},
             },
         ),
     ]

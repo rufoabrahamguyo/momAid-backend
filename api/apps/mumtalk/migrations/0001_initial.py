@@ -18,8 +18,19 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="MumTalkPost",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("public_id", models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "public_id",
+                    models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+                ),
                 ("content", models.TextField(max_length=280)),
                 ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),

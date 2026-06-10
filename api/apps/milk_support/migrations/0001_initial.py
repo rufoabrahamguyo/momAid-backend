@@ -15,21 +15,42 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='MilkListing',
+            name="MilkListing",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('listing_type', models.CharField(choices=[('donate', 'Donating Milk'), ('need', 'Need Milk')], max_length=10)),
-                ('quantity_ml', models.IntegerField()),
-                ('location_lat', models.DecimalField(decimal_places=7, max_digits=10)),
-                ('location_lng', models.DecimalField(decimal_places=7, max_digits=10)),
-                ('location_address', models.CharField(max_length=255)),
-                ('expiration_date', models.DateTimeField()),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='milk_listings', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "listing_type",
+                    models.CharField(
+                        choices=[("donate", "Donating Milk"), ("need", "Need Milk")],
+                        max_length=10,
+                    ),
+                ),
+                ("quantity_ml", models.IntegerField()),
+                ("location_lat", models.DecimalField(decimal_places=7, max_digits=10)),
+                ("location_lng", models.DecimalField(decimal_places=7, max_digits=10)),
+                ("location_address", models.CharField(max_length=255)),
+                ("expiration_date", models.DateTimeField()),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="milk_listings",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
     ]

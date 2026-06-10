@@ -8,36 +8,58 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='BabyCondition',
+            name="BabyCondition",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
-                ('icon', models.CharField(default='👶', max_length=10)),
-                ('order', models.IntegerField(default=0)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("icon", models.CharField(default="👶", max_length=10)),
+                ("order", models.IntegerField(default=0)),
             ],
             options={
-                'ordering': ['order', 'id'],
+                "ordering": ["order", "id"],
             },
         ),
         migrations.CreateModel(
-            name='Remedy',
+            name="Remedy",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=100)),
-                ('description', models.TextField()),
-                ('duration_minutes', models.IntegerField(blank=True, null=True)),
-                ('gif_url', models.URLField(blank=True)),
-                ('order', models.IntegerField(default=0)),
-                ('condition', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='remedies', to='remedies.babycondition')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=100)),
+                ("description", models.TextField()),
+                ("duration_minutes", models.IntegerField(blank=True, null=True)),
+                ("gif_url", models.URLField(blank=True)),
+                ("order", models.IntegerField(default=0)),
+                (
+                    "condition",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="remedies",
+                        to="remedies.babycondition",
+                    ),
+                ),
             ],
             options={
-                'verbose_name_plural': 'Remedies',
-                'ordering': ['order', 'id'],
+                "verbose_name_plural": "Remedies",
+                "ordering": ["order", "id"],
             },
         ),
     ]

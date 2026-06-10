@@ -7,13 +7,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('feeds', '0002_alter_video_options_and_more'),
+        ("feeds", "0002_alter_video_options_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='video',
-            name='video_file',
-            field=models.FileField(blank=True, null=True, storage=apps.feeds.models.get_video_storage, upload_to='videos'),
+            model_name="video",
+            name="video_file",
+            field=models.FileField(
+                blank=True,
+                null=True,
+                storage=apps.feeds.models.get_video_storage,
+                upload_to="videos",
+            ),
         ),
     ]

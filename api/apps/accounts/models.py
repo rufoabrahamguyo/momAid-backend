@@ -1,6 +1,10 @@
 import uuid
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin,
+)
 from django.utils import timezone
 from cloudinary.models import CloudinaryField
 
@@ -33,23 +37,27 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
 
     class Role(models.TextChoices):
-        MOTHER  = "mother",  "Mother"
+        MOTHER = "mother", "Mother"
         PARTNER = "partner", "Partner"
-        ADMIN   = "admin",   "Admin"
+        ADMIN = "admin", "Admin"
 
-    public_id  = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
-    email      = models.EmailField(max_length=254, unique=True, db_index=True)
-    username   = models.CharField(max_length=50, null=True, blank=True)
-    role       = models.CharField(max_length=20, choices=Role.choices, default=Role.MOTHER, db_index=True)
-    image      = CloudinaryField(null=True, blank=True)
-    is_staff   = models.BooleanField(default=False)
-    is_active  = models.BooleanField(default=True, db_index=True)
-    joined_at  = models.DateTimeField(auto_now_add=True)
+    public_id = models.UUIDField(
+        default=uuid.uuid4, editable=False, unique=True, db_index=True
+    )
+    email = models.EmailField(max_length=254, unique=True, db_index=True)
+    username = models.CharField(max_length=50, null=True, blank=True)
+    role = models.CharField(
+        max_length=20, choices=Role.choices, default=Role.MOTHER, db_index=True
+    )
+    image = CloudinaryField(null=True, blank=True)
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True, db_index=True)
+    joined_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = UserManager()
 
-    USERNAME_FIELD  = "email"
+    USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
     class Meta:
@@ -63,9 +71,11 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class MotherProfile(TimeStampedModel):
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="mother_profile")
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="mother_profile"
+    )
     public_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    baby_due_date   = models.DateField(null=True, blank=True)
+    baby_due_date = models.DateField(null=True, blank=True)
     baby_birth_date = models.DateField(null=True, blank=True)
     partner = models.OneToOneField(
         "PartnerProfile",
@@ -83,7 +93,7 @@ class MotherProfile(TimeStampedModel):
         if not self.baby_due_date:
             return 1
         days_remaining = (self.baby_due_date - timezone.now().date()).days
-        days_pregnant  = 280 - days_remaining
+        days_pregnant = 280 - days_remaining
         return max(1, min(days_pregnant // 7, 42))
 
     def __str__(self):

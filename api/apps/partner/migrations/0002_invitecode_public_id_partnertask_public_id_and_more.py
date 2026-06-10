@@ -7,23 +7,29 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partner', '0001_initial'),
+        ("partner", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='invitecode',
-            name='public_id',
-            field=models.UUIDField(blank=True, default=uuid.uuid4, editable=False, null=True),
+            model_name="invitecode",
+            name="public_id",
+            field=models.UUIDField(
+                blank=True, default=uuid.uuid4, editable=False, null=True
+            ),
         ),
         migrations.AddField(
-            model_name='partnertask',
-            name='public_id',
-            field=models.UUIDField(blank=True, default=uuid.uuid4, editable=False, null=True),
+            model_name="partnertask",
+            name="public_id",
+            field=models.UUIDField(
+                blank=True, default=uuid.uuid4, editable=False, null=True
+            ),
         ),
         migrations.AddField(
-            model_name='partnertaskcompletion',
-            name='public_id',
-            field=models.UUIDField(blank=True, default=uuid.uuid4, editable=False, null=True),
+            model_name="partnertaskcompletion",
+            name="public_id",
+            field=models.UUIDField(
+                blank=True, default=uuid.uuid4, editable=False, null=True
+            ),
         ),
     ]

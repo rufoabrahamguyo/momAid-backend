@@ -20,7 +20,9 @@ class BabyCondition(models.Model):
 class Remedy(models.Model):
     """A remedy suggestion under a condition."""
 
-    condition = models.ForeignKey(BabyCondition, on_delete=models.CASCADE, related_name="remedies")
+    condition = models.ForeignKey(
+        BabyCondition, on_delete=models.CASCADE, related_name="remedies"
+    )
     title = models.CharField(max_length=100)
     description = models.TextField()
     duration_minutes = models.IntegerField(null=True, blank=True)

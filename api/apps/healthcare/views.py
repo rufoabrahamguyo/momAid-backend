@@ -16,7 +16,6 @@ from apps.healthcare.serializers import (
 )
 
 
-
 class EmergencyContactListCreateView(generics.ListCreateAPIView):
     serializer_class = EmergencyContactSerializer
     permission_classes = [IsAuthenticated]
@@ -50,7 +49,10 @@ class HospitalNearbyView(generics.ListAPIView):
         filters_raw = request.query_params.get("filters", "")
         if lat is None or lng is None:
             return Response(
-                {"error": "lat and lng are required.", "detail": "lat and lng are required."},
+                {
+                    "error": "lat and lng are required.",
+                    "detail": "lat and lng are required.",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
@@ -59,7 +61,10 @@ class HospitalNearbyView(generics.ListAPIView):
             radius_f = float(radius)
         except (TypeError, ValueError):
             return Response(
-                {"error": "Invalid coordinates or radius.", "detail": "Invalid coordinates or radius."},
+                {
+                    "error": "Invalid coordinates or radius.",
+                    "detail": "Invalid coordinates or radius.",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         qs = list(Hospital.objects.all())
@@ -72,7 +77,9 @@ class HospitalNearbyView(generics.ListAPIView):
                 continue
             if "maternal" in flags and not h.has_maternal_emergency:
                 continue
-            d = haversine_distance_km(lat_f, lng_f, float(h.location_lat), float(h.location_lng))
+            d = haversine_distance_km(
+                lat_f, lng_f, float(h.location_lat), float(h.location_lng)
+            )
             if d <= radius_f:
                 nearby.append((d, h))
         nearby.sort(key=lambda x: x[0])
@@ -101,7 +108,10 @@ class EmergencyTriggerView(APIView):
             phones.append(user.ob_phone)
         if not phones:
             return Response(
-                {"error": "No emergency numbers on profile.", "detail": "Add support or OB phone first."},
+                {
+                    "error": "No emergency numbers on profile.",
+                    "detail": "Add support or OB phone first.",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         for p in phones:

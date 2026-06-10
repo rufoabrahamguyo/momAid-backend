@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 class ErrorHandlerMiddleware:
 
-
     def __init__(self, get_response):
         self.get_response = get_response
 
@@ -23,16 +22,17 @@ class ErrorHandlerMiddleware:
         user = getattr(request, "user", None)
         user_email = user.email if user and user.is_authenticated else "anonymous"
 
-  
         if (
             isinstance(exception, ResponseError)
             and "max daily request limit exceeded" in str(exception).lower()
         ):
-            self._alert_discord({
-                "alert": "REDIS QUOTA EXHAUSTED",
-                "path": request.path,
-                "user": user_email,
-            })
+            self._alert_discord(
+                {
+                    "alert": "REDIS QUOTA EXHAUSTED",
+                    "path": request.path,
+                    "user": user_email,
+                }
+            )
             return JsonResponse(
                 {
                     "status": "maintenance",
@@ -48,32 +48,32 @@ class ErrorHandlerMiddleware:
             "Unhandled exception",
             extra={"path": request.path, "user": user_email},
         )
-        self._alert_discord({
-            "error": str(exception),
-            "path": request.path,
-            "user": user_email,
-        })
-        return None 
+        self._alert_discord(
+            {
+                "error": str(exception),
+                "path": request.path,
+                "user": user_email,
+            }
+        )
+        return None
 
     @staticmethod
     def _alert_discord(payload: dict):
         try:
             from mumaid.utils.discord import send_error_to_discord
+
             send_error_to_discord(payload)
         except Exception:
             logger.warning("Discord alert failed", exc_info=True)
 
 
-
-
-
 _EXEMPT_PREFIXES = ("/admin/", "/static/", "/media/", "/api/docs/", "/api/schema/")
 
 _PATH_TIERS = [
-    ("login",       "login_limit"),
-    ("register",    "login_limit"),
-    ("resend-otp",  "otp_limit"),
-    ("verify",      "otp_limit"),
+    ("login", "login_limit"),
+    ("register", "login_limit"),
+    ("resend-otp", "otp_limit"),
+    ("verify", "otp_limit"),
     ("profile/image", "upload_limit"),
 ]
 
@@ -81,7 +81,6 @@ _PERIOD_SECONDS = {"minute": 60, "min": 60, "hour": 3600, "day": 86400}
 
 
 class GlobalRateLimiter:
-
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -112,7 +111,6 @@ class GlobalRateLimiter:
         response["X-RateLimit-Limit"] = str(limit)
         response["X-RateLimit-Remaining"] = str(max(0, limit - count))
         return response
-
 
     @staticmethod
     def _resolve_tier(request, path: str) -> str:

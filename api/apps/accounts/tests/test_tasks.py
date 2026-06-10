@@ -22,7 +22,10 @@ class TestSendOtpEmail:
         assert "verify" in mail.outbox[0].subject.lower()
 
     def test_retries_on_failure(self):
-        with patch("django.core.mail.EmailMessage.send", side_effect=[Exception("SMTP error"), None]):
+        with patch(
+            "django.core.mail.EmailMessage.send",
+            side_effect=[Exception("SMTP error"), None],
+        ):
             # Should not raise — autoretry handles it
             try:
                 send_otp_email("retry@example.com", "999999")
