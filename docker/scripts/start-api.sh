@@ -1,17 +1,17 @@
 #!/bin/sh
 set -e
 
-echo "🌐 Starting Gunicorn..."
+echo "Starting Gunicorn..."
 exec gunicorn mumaid.wsgi:application \
-    --bind 0.0.0.0:8000 \
-    --workers ${GUNICORN_WORKERS:-2} \
-    --threads ${GUNICORN_THREADS:-1} \
+    --bind 0.0.0.0:${PORT:-8000} \
+    --workers 1 \
+    --threads 2 \
     --worker-class gthread \
     --worker-tmp-dir /dev/shm \
-    --timeout 120 \
-    --keep-alive 5 \
-    --max-requests 1000 \
-    --max-requests-jitter 100 \
-    --log-level info \
+    --timeout 60 \
+    --keep-alive 2 \
+    --max-requests 500 \
+    --max-requests-jitter 50 \
+    --log-level warning \
     --access-logfile - \
     --error-logfile -
