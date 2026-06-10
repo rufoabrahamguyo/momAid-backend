@@ -1,12 +1,9 @@
-
 from __future__ import annotations
 
 import hashlib
 import math
 
 from django.conf import settings
-
-
 
 
 def haversine_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -19,7 +16,6 @@ def haversine_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) ->
     return r * 2 * math.asin(min(1.0, math.sqrt(a)))
 
 
-
 def maps_link(lat: float, lng: float) -> str:
     """Google Maps URL for a coordinate pair."""
     return f"https://www.google.com/maps?q={lat},{lng}"
@@ -28,7 +24,6 @@ def maps_link(lat: float, lng: float) -> str:
 def format_emergency_message(user_name: str, lat: float, lng: float) -> str:
     """Build emergency SMS body with a maps link."""
     return f"MomAid emergency: {user_name} needs help. Location: {maps_link(lat, lng)}"
-
 
 
 def hash_user_identity(user_id: int) -> str:

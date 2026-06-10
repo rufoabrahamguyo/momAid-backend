@@ -12,7 +12,9 @@ class MilkListing(models.Model):
         NEED = "need", "Need Milk"
 
     listing_type = models.CharField(max_length=10, choices=ListingType.choices)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="milk_listings")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="milk_listings"
+    )
     quantity_ml = models.IntegerField()
     location_lat = models.DecimalField(max_digits=10, decimal_places=7)
     location_lng = models.DecimalField(max_digits=10, decimal_places=7)

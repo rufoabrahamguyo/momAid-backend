@@ -3,14 +3,16 @@ Accounts service tests.
 Business logic lives in services — so most of your meaningful tests live here.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from django.core.cache import cache
 from django.contrib.auth import get_user_model
-from unittest.mock import patch, MagicMock
+from django.core.cache import cache
 
 from apps.accounts import services
 from apps.accounts.models import MotherProfile, PartnerProfile
-from .factories import MotherUserFactory, PartnerUserFactory, InactiveUserFactory
+
+from .factories import MotherUserFactory, PartnerUserFactory
 
 User = get_user_model()
 
@@ -67,54 +69,77 @@ class TestOTP:
             services.resend_otp(email="resend@example.com")
         assert cache.get("otp:resend@example.com") is not None
 
+
 @pytest.mark.django_db
 class TestRegisterUser:
 
     def test_creates_inactive_user(self):
         with patch("apps.accounts.tasks.send_otp_email.delay"):
-            user = services.register_user(email="reg@example.com", password="securepass123", role="mother")
+            user = services.register_user(
+                email="reg@example.com", password="securepass123", role="mother"
+            )
         assert user.is_active is False
 
     def test_creates_mother_profile_for_mother(self):
         with patch("apps.accounts.tasks.send_otp_email.delay"):
-            user = services.register_user(email="mum@example.com", password="securepass123", role="mother")
+            user = services.register_user(
+                email="mum@example.com", password="securepass123", role="mother"
+            )
         assert MotherProfile.objects.filter(user=user).exists()
 
     def test_does_not_create_partner_profile_for_mother(self):
         with patch("apps.accounts.tasks.send_otp_email.delay"):
-            user = services.register_user(email="mum2@example.com", password="securepass123", role="mother")
+            user = services.register_user(
+                email="mum2@example.com", password="securepass123", role="mother"
+            )
         assert not PartnerProfile.objects.filter(user=user).exists()
 
     def test_creates_partner_profile_for_partner(self):
         with patch("apps.accounts.tasks.send_otp_email.delay"):
-            user = services.register_user(email="dad@example.com", password="securepass123", role="partner")
+            user = services.register_user(
+                email="dad@example.com", password="securepass123", role="partner"
+            )
         assert PartnerProfile.objects.filter(user=user).exists()
 
     def test_sends_otp_after_registration(self):
         with patch("apps.accounts.tasks.send_otp_email.delay") as mock_task:
-            services.register_user(email="otp2@example.com", password="securepass123", role="mother")
+            services.register_user(
+                email="otp2@example.com", password="securepass123", role="mother"
+            )
         mock_task.assert_called_once()
 
     def test_rolls_back_on_failure(self):
-        with patch("apps.accounts.models.MotherProfile.objects.create", side_effect=Exception("DB error")):
+        with patch(
+            "apps.accounts.models.MotherProfile.objects.create",
+            side_effect=Exception("DB error"),
+        ):
             with patch("apps.accounts.tasks.send_otp_email.delay"):
                 with pytest.raises(Exception):
-                    services.register_user(email="rollback@example.com", password="securepass123", role="mother")
+                    services.register_user(
+                        email="rollback@example.com",
+                        password="securepass123",
+                        role="mother",
+                    )
         assert not User.objects.filter(email="rollback@example.com").exists()
+
 
 @pytest.mark.django_db
 class TestActivateUser:
 
     def test_activates_user(self):
         with patch("apps.accounts.tasks.send_otp_email.delay"):
-            services.register_user(email="act@example.com", password="securepass123", role="mother")
+            services.register_user(
+                email="act@example.com", password="securepass123", role="mother"
+            )
         otp = cache.get("otp:act@example.com")
         activated, _ = services.activate_user(email="act@example.com", otp=otp)
         assert activated.is_active is True
 
     def test_returns_jwt_tokens(self):
         with patch("apps.accounts.tasks.send_otp_email.delay"):
-            services.register_user(email="tok@example.com", password="securepass123", role="mother")
+            services.register_user(
+                email="tok@example.com", password="securepass123", role="mother"
+            )
         otp = cache.get("otp:tok@example.com")
         _, tokens = services.activate_user(email="tok@example.com", otp=otp)
         assert "access" in tokens
@@ -122,7 +147,9 @@ class TestActivateUser:
 
     def test_invalid_otp_raises_value_error(self):
         with patch("apps.accounts.tasks.send_otp_email.delay"):
-            services.register_user(email="bad@example.com", password="securepass123", role="mother")
+            services.register_user(
+                email="bad@example.com", password="securepass123", role="mother"
+            )
         with pytest.raises(ValueError):
             services.activate_user(email="bad@example.com", otp="000000")
 
@@ -131,20 +158,22 @@ class TestActivateUser:
             services.activate_user(email="ghost@example.com", otp="123456")
 
 
-
 @pytest.mark.django_db
 class TestLogoutUser:
 
     def test_blacklists_refresh_token(self):
         user = MotherUserFactory()
         from rest_framework_simplejwt.tokens import RefreshToken
+
         refresh = RefreshToken.for_user(user)
         services.logout_user(refresh_token=str(refresh))
         from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
+
         assert BlacklistedToken.objects.filter(token__jti=refresh["jti"]).exists()
 
     def test_invalid_token_raises_token_error(self):
         from rest_framework_simplejwt.exceptions import TokenError
+
         with pytest.raises(TokenError):
             services.logout_user(refresh_token="not.a.valid.token")
 
@@ -169,6 +198,7 @@ class TestUpdateMotherProfile:
 
     def test_updates_due_date(self):
         from datetime import date
+
         user = MotherUserFactory()
         due = date(2025, 12, 1)
         services.update_mother_profile(user=user, data={"baby_due_date": due})
@@ -179,7 +209,6 @@ class TestUpdateMotherProfile:
         user = PartnerUserFactory()
         with pytest.raises(ValueError, match="Mother profile not found"):
             services.update_mother_profile(user=user, data={"baby_due_date": None})
-
 
 
 @pytest.mark.django_db
@@ -193,13 +222,25 @@ class TestUploadProfileImage:
 
     def test_uploads_and_returns_url(self):
         user = MotherUserFactory()
-        with patch("cloudinary.uploader.upload", return_value={"public_id": "x", "secure_url": "https://cdn.example.com/img.jpg"}):
+        with patch(
+            "cloudinary.uploader.upload",
+            return_value={
+                "public_id": "x",
+                "secure_url": "https://cdn.example.com/img.jpg",
+            },
+        ):
             url = services.upload_profile_image(user=user, file=self._mock_file())
         assert url == "https://cdn.example.com/img.jpg"
 
     def test_persists_public_id(self):
         user = MotherUserFactory()
-        with patch("cloudinary.uploader.upload", return_value={"public_id": "profile_pics/user_1", "secure_url": "https://x.com/img.jpg"}):
+        with patch(
+            "cloudinary.uploader.upload",
+            return_value={
+                "public_id": "profile_pics/user_1",
+                "secure_url": "https://x.com/img.jpg",
+            },
+        ):
             services.upload_profile_image(user=user, file=self._mock_file())
         user.refresh_from_db()
         assert str(user.image) == "profile_pics/user_1"
@@ -207,9 +248,13 @@ class TestUploadProfileImage:
     def test_rejects_oversized_file(self):
         user = MotherUserFactory()
         with pytest.raises(ValueError, match="5 MB"):
-            services.upload_profile_image(user=user, file=self._mock_file(size=10 * 1024 * 1024))
+            services.upload_profile_image(
+                user=user, file=self._mock_file(size=10 * 1024 * 1024)
+            )
 
     def test_rejects_invalid_content_type(self):
         user = MotherUserFactory()
         with pytest.raises(ValueError, match="Unsupported"):
-            services.upload_profile_image(user=user, file=self._mock_file(content_type="application/pdf"))
+            services.upload_profile_image(
+                user=user, file=self._mock_file(content_type="application/pdf")
+            )

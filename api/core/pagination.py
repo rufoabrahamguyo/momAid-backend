@@ -1,5 +1,3 @@
-
-
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
@@ -33,5 +31,6 @@ class StandardResultsPagination(PageNumberPagination):
 
 class LargeResultsPagination(StandardResultsPagination):
     """For feeds, listings — where clients expect more per page."""
+
     page_size = 50
     max_page_size = 200

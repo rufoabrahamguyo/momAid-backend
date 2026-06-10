@@ -2,19 +2,18 @@
 
 from __future__ import annotations
 
+from core.renderers import haversine_distance_km
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.renderers import haversine_distance_km
 from apps.healthcare.models import EmergencyContact, Hospital
 from apps.healthcare.serializers import (
     EmergencyContactSerializer,
     EmergencyTriggerSerializer,
     HospitalSerializer,
 )
-
 
 
 class EmergencyContactListCreateView(generics.ListCreateAPIView):
@@ -50,7 +49,10 @@ class HospitalNearbyView(generics.ListAPIView):
         filters_raw = request.query_params.get("filters", "")
         if lat is None or lng is None:
             return Response(
-                {"error": "lat and lng are required.", "detail": "lat and lng are required."},
+                {
+                    "error": "lat and lng are required.",
+                    "detail": "lat and lng are required.",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
@@ -59,7 +61,10 @@ class HospitalNearbyView(generics.ListAPIView):
             radius_f = float(radius)
         except (TypeError, ValueError):
             return Response(
-                {"error": "Invalid coordinates or radius.", "detail": "Invalid coordinates or radius."},
+                {
+                    "error": "Invalid coordinates or radius.",
+                    "detail": "Invalid coordinates or radius.",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         qs = list(Hospital.objects.all())
@@ -72,7 +77,9 @@ class HospitalNearbyView(generics.ListAPIView):
                 continue
             if "maternal" in flags and not h.has_maternal_emergency:
                 continue
-            d = haversine_distance_km(lat_f, lng_f, float(h.location_lat), float(h.location_lng))
+            d = haversine_distance_km(
+                lat_f, lng_f, float(h.location_lat), float(h.location_lng)
+            )
             if d <= radius_f:
                 nearby.append((d, h))
         nearby.sort(key=lambda x: x[0])
@@ -90,10 +97,11 @@ class EmergencyTriggerView(APIView):
     def post(self, request) -> Response:
         ser = EmergencyTriggerSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
-        lat = ser.validated_data["location_lat"]
-        lng = ser.validated_data["location_lng"]
+        _lat = ser.validated_data["location_lat"]
+        _lng = ser.validated_data["location_lng"]
         user = request.user
-        user_name = str(user.phone)
+        _user_name = str(user.phone)
+
         phones = []
         if user.support_person_phone:
             phones.append(user.support_person_phone)
@@ -101,7 +109,10 @@ class EmergencyTriggerView(APIView):
             phones.append(user.ob_phone)
         if not phones:
             return Response(
-                {"error": "No emergency numbers on profile.", "detail": "Add support or OB phone first."},
+                {
+                    "error": "No emergency numbers on profile.",
+                    "detail": "Add support or OB phone first.",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         for p in phones:

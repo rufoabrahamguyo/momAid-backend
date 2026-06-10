@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import VideoAttributes, Video, Comment, VideoHistory
+
+from .models import Comment, Video, VideoAttributes, VideoHistory
 
 
 class VideoAttributesSerializer(serializers.ModelSerializer):
@@ -26,22 +27,34 @@ class VideoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Video
-        fields = ["public_id", "video_file", "user", "attributes", "video_file_path","created_at","updated_at",]
-        read_only_fields = ["public_id", "user", "video_file","created_at","updated_at",]
+        fields = [
+            "public_id",
+            "video_file",
+            "user",
+            "attributes",
+            "video_file_path",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "public_id",
+            "user",
+            "video_file",
+            "created_at",
+            "updated_at",
+        ]
 
     def create(self, validated_data):
-        validated_data.pop('video_file_path', None)
+        validated_data.pop("video_file_path", None)
 
-        attr_data = validated_data.pop('attributes')
-        user = validated_data.pop('user')
-        video_url = validated_data.pop('video_file', None)
+        attr_data = validated_data.pop("attributes")
+        user = validated_data.pop("user")
+        video_url = validated_data.pop("video_file", None)
 
         attribute_instance = VideoAttributes.objects.create(**attr_data)
 
         video = Video.objects.create(
-            user=user,
-            video_file=video_url,
-            attributes=attribute_instance
+            user=user, video_file=video_url, attributes=attribute_instance
         )
 
         return video
@@ -67,19 +80,16 @@ class CommentListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = [
-            "public_id",
-            "content",
-            "created_at",
-            "replies"
-        ]
+        fields = ["public_id", "content", "created_at", "replies"]
+
 
 class VideoDetailsSerializer(serializers.ModelSerializer):
     attributes = VideoAttributesSerializer(read_only=True)
 
     class Meta:
-        model = Video 
-        fields = ['public_id', 'video_file', 'attributes', 'created_at']
+        model = Video
+        fields = ["public_id", "video_file", "attributes", "created_at"]
+
 
 class VideoHistorySerializer(serializers.ModelSerializer):
     video = VideoDetailsSerializer(read_only=True)
@@ -87,7 +97,7 @@ class VideoHistorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = VideoHistory
-        fields = ['video', 'last_watched_at', 'updated_at', 'progress_percentage']
+        fields = ["video", "last_watched_at", "updated_at", "progress_percentage"]
 
     def get_progress_percentage(self, obj):
         duration = obj.video.attributes.duration

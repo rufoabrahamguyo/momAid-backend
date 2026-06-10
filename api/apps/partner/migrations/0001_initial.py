@@ -15,47 +15,104 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='PartnerTask',
+            name="PartnerTask",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=100)),
-                ('description', models.TextField()),
-                ('why_it_matters', models.TextField(blank=True, null=True)),
-                ('category', models.CharField(choices=[('health', 'Health & Nutrition'), ('logistics', 'Planning & Logistics'), ('emotional', 'Emotional Support'), ('prep', 'Nursery & Gear')], default='logistics', max_length=20)),
-                ('baby_age_weeks_min', models.IntegerField()),
-                ('baby_age_weeks_max', models.IntegerField()),
-                ('is_recurring', models.BooleanField(default=False)),
-                ('icon', models.CharField(default='🤝', max_length=10)),
-                ('estimated_time', models.CharField(blank=True, max_length=20)),
-                ('order', models.IntegerField(default=0)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=100)),
+                ("description", models.TextField()),
+                ("why_it_matters", models.TextField(blank=True, null=True)),
+                (
+                    "category",
+                    models.CharField(
+                        choices=[
+                            ("health", "Health & Nutrition"),
+                            ("logistics", "Planning & Logistics"),
+                            ("emotional", "Emotional Support"),
+                            ("prep", "Nursery & Gear"),
+                        ],
+                        default="logistics",
+                        max_length=20,
+                    ),
+                ),
+                ("baby_age_weeks_min", models.IntegerField()),
+                ("baby_age_weeks_max", models.IntegerField()),
+                ("is_recurring", models.BooleanField(default=False)),
+                ("icon", models.CharField(default="🤝", max_length=10)),
+                ("estimated_time", models.CharField(blank=True, max_length=20)),
+                ("order", models.IntegerField(default=0)),
             ],
             options={
-                'ordering': ['order', 'id'],
+                "ordering": ["order", "id"],
             },
         ),
         migrations.CreateModel(
-            name='InviteCode',
+            name="InviteCode",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('code', models.CharField(max_length=6, unique=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('expires_at', models.DateTimeField()),
-                ('creator', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='active_code', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("code", models.CharField(max_length=6, unique=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("expires_at", models.DateTimeField()),
+                (
+                    "creator",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="active_code",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='PartnerTaskCompletion',
+            name="PartnerTaskCompletion",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', models.CharField(default='completed', max_length=20)),
-                ('notes', models.TextField(blank=True, null=True)),
-                ('completed_at', models.DateTimeField(auto_now_add=True)),
-                ('partner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='completions', to=settings.AUTH_USER_MODEL)),
-                ('task', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='partner_tasks', to='partner.partnertask')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("status", models.CharField(default="completed", max_length=20)),
+                ("notes", models.TextField(blank=True, null=True)),
+                ("completed_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "partner",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="completions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "task",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="partner_tasks",
+                        to="partner.partnertask",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-completed_at'],
-                'unique_together': {('partner', 'task')},
+                "ordering": ["-completed_at"],
+                "unique_together": {("partner", "task")},
             },
         ),
     ]

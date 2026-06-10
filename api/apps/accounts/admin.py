@@ -6,6 +6,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import (
     BaseUserCreationForm,
+)
+from django.contrib.auth.forms import (
     UserChangeForm as AuthUserChangeForm,
 )
 from django.core.exceptions import ValidationError
@@ -58,13 +60,18 @@ class UserAdmin(BaseUserAdmin):
         (None, {"fields": ("id", "email", "password")}),
         (_("Account"), {"fields": ("role",)}),
         (_("Profile"), {"fields": ("image",)}),
-        (_("Permissions"), {"fields": (
-            "is_active",
-            "is_staff",
-            "is_superuser",
-            "groups",
-            "user_permissions",
-        )}),
+        (
+            _("Permissions"),
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                )
+            },
+        ),
         (_("Important dates"), {"fields": ("last_login", "joined_at", "updated_at")}),
     )
     add_fieldsets = (

@@ -1,24 +1,21 @@
 import logging
 
+from core.throttles import LoginRateThrottle, OtpRateThrottle, UploadRateThrottle
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.throttling import ScopedRateThrottle
-
-from core.throttles import LoginRateThrottle, OtpRateThrottle, UploadRateThrottle
 
 from . import services
 from .serializers import (
     RegisterSerializer,
-    UserSerializer,
-    UpdateUserProfileSerializer,
-    UpdateMotherProfileSerializer,
-    VerifyOTPSerializer,
     ResendOTPSerializer,
-    GoogleLoginSerializer,
+    UpdateMotherProfileSerializer,
+    UpdateUserProfileSerializer,
+    UserSerializer,
+    VerifyOTPSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -26,21 +23,23 @@ logger = logging.getLogger(__name__)
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes   = [LoginRateThrottle]
+    throttle_classes = [LoginRateThrottle]
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         services.register_user(**serializer.validated_data)
         return Response(
-            {"detail": "Registration successful. Check your email for the activation code."},
+            {
+                "detail": "Registration successful. Check your email for the activation code."
+            },
             status=status.HTTP_201_CREATED,
         )
 
 
 class VerifyOTPView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes   = [OtpRateThrottle]
+    throttle_classes = [OtpRateThrottle]
 
     def post(self, request):
         serializer = VerifyOTPSerializer(data=request.data)
@@ -51,12 +50,14 @@ class VerifyOTPView(APIView):
         except ValueError as e:
             return Response({"detail": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
 
-        return Response({"detail": "Account activated.", **tokens}, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": "Account activated.", **tokens}, status=status.HTTP_200_OK
+        )
 
 
 class ResendOTPView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes   = [OtpRateThrottle]
+    throttle_classes = [OtpRateThrottle]
 
     def post(self, request):
         serializer = ResendOTPSerializer(data=request.data)
@@ -78,11 +79,17 @@ class LogoutView(APIView):
     def post(self, request):
         refresh_token = request.data.get("refresh")
         if not refresh_token:
-            return Response({"detail": "Refresh token required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Refresh token required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         try:
             services.logout_user(refresh_token=refresh_token)
         except TokenError:
-            return Response({"detail": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Invalid or expired token."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -138,12 +145,15 @@ class UpdateMotherProfileView(APIView):
 
 class ProfileImageView(APIView):
     permission_classes = [IsAuthenticated]
-    throttle_classes   = [UploadRateThrottle]
+    throttle_classes = [UploadRateThrottle]
 
     def put(self, request):
         file = request.FILES.get("profile_pic")
         if not file:
-            return Response({"detail": "Image file is required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Image file is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         try:
             url = services.upload_profile_image(user=request.user, file=file)
         except ValueError as e:

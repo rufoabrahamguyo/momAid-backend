@@ -5,6 +5,7 @@ from .models import PartnerTask, PartnerTaskCompletion
 
 User = get_user_model()
 
+
 class PartnerTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerTask
@@ -21,12 +22,15 @@ class PartnerTaskSerializer(serializers.ModelSerializer):
             "why_it_matters",
         ]
 
-        read_only_fields = ['public_id']
+        read_only_fields = ["public_id"]
 
     def validate(self, data):
-        if data['baby_age_weeks_min'] > data['baby_age_weeks_max']:
-            raise serializers.ValidationError("Min week cannot be greater than Max week.")
+        if data["baby_age_weeks_min"] > data["baby_age_weeks_max"]:
+            raise serializers.ValidationError(
+                "Min week cannot be greater than Max week."
+            )
         return data
+
 
 class PartnerTaskCompletionSerializer(serializers.ModelSerializer):
     attrs = PartnerTaskSerializer(read_only=True)
@@ -34,11 +38,9 @@ class PartnerTaskCompletionSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerTaskCompletion
         fields = [
-            'public_id',
-            'status',
-            'completed_at',
-            'attrs',
+            "public_id",
+            "status",
+            "completed_at",
+            "attrs",
         ]
-        read_only_fields = ['public_id']
-
-
+        read_only_fields = ["public_id"]

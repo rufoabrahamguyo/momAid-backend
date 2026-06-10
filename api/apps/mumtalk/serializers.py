@@ -1,17 +1,18 @@
 from rest_framework import serializers
+
 from .models import MumTalkPost, MumTalkReply
 
 
 class MumTalkReplySerializer(serializers.ModelSerializer):
     is_root_reply = serializers.BooleanField(read_only=True)
-    children = serializers.SerializerMethodField()            
+    children = serializers.SerializerMethodField()
 
     class Meta:
         model = MumTalkReply
         fields = [
             "public_id",
             "content",
-            "parent_reply",                                    
+            "parent_reply",
             "is_root_reply",
             "children",
             "created_at",
@@ -19,7 +20,7 @@ class MumTalkReplySerializer(serializers.ModelSerializer):
         read_only_fields = ["public_id", "is_root_reply", "children", "created_at"]
 
     def get_children(self, obj):
-        children = obj.children.all()                           
+        children = obj.children.all()
         return MumTalkReplySerializer(children, many=True).data
 
     def validate_content(self, value):
@@ -41,7 +42,7 @@ class MumTalkCreateReplySerializer(serializers.ModelSerializer):
 
 
 class MumTalkPostSerializer(serializers.ModelSerializer):
-    replies = serializers.SerializerMethodField()              
+    replies = serializers.SerializerMethodField()
     reply_count = serializers.IntegerField(read_only=True)
 
     class Meta:

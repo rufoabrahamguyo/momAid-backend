@@ -6,22 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('mumtalk', '0002_remove_mumtalkpost_user_mumtalkpost_author_and_more'),
+        ("mumtalk", "0002_remove_mumtalkpost_user_mumtalkpost_author_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='mumtalkpost',
-            name='author',
+            model_name="mumtalkpost",
+            name="author",
         ),
         migrations.AddField(
-            model_name='mumtalkpost',
-            name='author_hash',
+            model_name="mumtalkpost",
+            name="author_hash",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AlterField(
-            model_name='mumtalkpost',
-            name='title',
+            model_name="mumtalkpost",
+            name="title",
             field=models.CharField(blank=True, max_length=255, null=True, unique=True),
         ),
     ]

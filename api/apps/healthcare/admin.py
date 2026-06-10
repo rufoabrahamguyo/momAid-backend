@@ -12,4 +12,10 @@ class EmergencyContactAdmin(admin.ModelAdmin):
 
 @admin.register(Hospital)
 class HospitalAdmin(admin.ModelAdmin):
-    list_display = ("name", "phone", "has_psychiatric_emergency", "has_pediatric_emergency", "has_maternal_emergency")
+    list_display = (
+        "name",
+        "phone",
+        "has_psychiatric_emergency",
+        "has_pediatric_emergency",
+        "has_maternal_emergency",
+    )

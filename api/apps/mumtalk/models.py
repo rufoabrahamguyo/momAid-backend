@@ -1,6 +1,7 @@
-from django.db import models
 import uuid
+
 from django.contrib.auth import get_user_model
+from django.db import models
 
 User = get_user_model()
 
@@ -15,12 +16,12 @@ class BaseModel(models.Model):
 
 
 class MumTalkPost(BaseModel):
-    title = models.CharField(max_length=255, unique=True, null=True, blank=True)       
-    content = models.TextField(max_length=300,null=True, blank=True)                
+    title = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    content = models.TextField(max_length=300, null=True, blank=True)
     author_hash = models.CharField(max_length=64, db_index=True, null=True, blank=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.title
@@ -31,23 +32,17 @@ class MumTalkPost(BaseModel):
 
 
 class MumTalkReply(BaseModel):
-    content = models.TextField(max_length=300)                 
-    author_replier_hash = models.CharField(max_length=64, db_index=True) 
+    content = models.TextField(max_length=300)
+    author_replier_hash = models.CharField(max_length=64, db_index=True)
     post = models.ForeignKey(
-        MumTalkPost,
-        on_delete=models.CASCADE,
-        related_name='replies'                                 
+        MumTalkPost, on_delete=models.CASCADE, related_name="replies"
     )
     parent_reply = models.ForeignKey(
-        'self',
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name='children'                                
+        "self", null=True, blank=True, on_delete=models.CASCADE, related_name="children"
     )
 
     class Meta:
-        ordering = ['created_at']
+        ordering = ["created_at"]
 
     def __str__(self):
         return f"Reply to {self.post.title}"

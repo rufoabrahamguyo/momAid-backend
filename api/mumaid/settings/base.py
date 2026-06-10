@@ -3,19 +3,17 @@ Base settings — shared across all environments.
 No secrets. No environment-specific logic. No defaults for sensitive values.
 """
 
-from pathlib import Path
-from datetime import timedelta
 import os
+from datetime import timedelta
+from pathlib import Path
+
 import environ
-
-
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
 env = environ.Env()
 
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"), overwrite=False)
-
 
 
 SECRET_KEY = env("SECRET_KEY")
@@ -62,8 +60,6 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 
-
-
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -71,13 +67,12 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "core.middleware.ErrorHandlerMiddleware",       
+    "core.middleware.ErrorHandlerMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "core.middleware.GlobalRateLimiter",              
+    "core.middleware.GlobalRateLimiter",
 ]
-
 
 
 ROOT_URLCONF = "mumaid.urls"
@@ -85,16 +80,16 @@ WSGI_APPLICATION = "mumaid.wsgi.application"
 ASGI_APPLICATION = "mumaid.asgi.application"
 
 
-
 AUTH_USER_MODEL = "accounts.User"
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
-
 
 
 LANGUAGE_CODE = "en-us"
@@ -103,13 +98,11 @@ USE_I18N = True
 USE_TZ = True
 
 
-
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
-
 
 
 TEMPLATES = [
@@ -127,8 +120,6 @@ TEMPLATES = [
         },
     },
 ]
-
-
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -166,7 +157,6 @@ REST_FRAMEWORK = {
 }
 
 
-
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=120),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
@@ -177,17 +167,15 @@ SIMPLE_JWT = {
 }
 
 
-
-
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
 CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_TIME_LIMIT = 30 * 60         
-CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60    
-CELERY_WORKER_PREFETCH_MULTIPLIER = 1   
-CELERY_TASK_ACKS_LATE = True             
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_ACKS_LATE = True
 
 CELERY_TASK_ROUTES = {
     "apps.notifications.tasks.*": {"queue": "notifications"},
@@ -205,7 +193,6 @@ SPECTACULAR_SETTINGS = {
 }
 
 
-
 CLOUDINARY_STORAGE = {
     "CLOUD_NAME": env("CLOUDINARY_CLOUD_NAME"),
     "API_KEY": env("CLOUDINARY_CLOUD_API_KEY"),
@@ -213,13 +200,13 @@ CLOUDINARY_STORAGE = {
 }
 
 import cloudinary
+
 cloudinary.config(
     cloud_name=env("CLOUDINARY_CLOUD_NAME"),
     api_key=env("CLOUDINARY_CLOUD_API_KEY"),
     api_secret=env("CLOUDINARY_CLOUD_API_SECRET"),
     secure=True,
 )
-
 
 
 ANONYMOUS_SALT = env("ANONYMOUS_SALT")
@@ -257,7 +244,7 @@ LOGGING = {
         },
         "django.db.queries": {
             "handlers": ["console"],
-            "level": "WARNING",  
+            "level": "WARNING",
             "propagate": False,
         },
         "celery": {

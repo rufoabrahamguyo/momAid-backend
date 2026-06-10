@@ -5,7 +5,6 @@ import csv
 from django.contrib import admin
 from django.db.models import Count
 from django.http import HttpResponse
-from django.utils.html import format_html
 
 from apps.opportunities.models import Opportunity, OpportunityInterest
 
@@ -48,9 +47,13 @@ class OpportunityAdmin(admin.ModelAdmin):
     @admin.action(description="Export interests for selected opportunities (CSV)")
     def export_interests_csv(self, request, queryset):
         response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = 'attachment; filename="opportunity-interests.csv"'
+        response["Content-Disposition"] = (
+            'attachment; filename="opportunity-interests.csv"'
+        )
         writer = csv.writer(response)
-        writer.writerow(["opportunity_title", "user_phone", "user_email", "interested_at"])
+        writer.writerow(
+            ["opportunity_title", "user_phone", "user_email", "interested_at"]
+        )
         for opp in queryset:
             for row in opp.interests.select_related("user"):
                 u = row.user

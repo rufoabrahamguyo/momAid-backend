@@ -1,12 +1,14 @@
-from .base import *  
+from .base import *
 
 DEBUG = False
 ALLOWED_HOSTS = ["*"]
 
 MIDDLEWARE = [
-    m for m in MIDDLEWARE 
-    if m not in [
-        "core.middleware.GlobalRateLimiter", 
+    m
+    for m in MIDDLEWARE
+    if m
+    not in [
+        "core.middleware.GlobalRateLimiter",
     ]
 ]
 
@@ -33,8 +35,6 @@ CELERY_TASK_EAGER_PROPAGATES = True
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 
-
-
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.InMemoryStorage",
@@ -45,13 +45,12 @@ STORAGES = {
 }
 
 
-
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
 
 
-MIGRATION_MODULES = {}    
+MIGRATION_MODULES = {}
 
 REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": [],
@@ -62,5 +61,5 @@ REST_FRAMEWORK = {
         "login_limit": None,
         "auth_limit": None,
         "upload_limit": None,
-    }
+    },
 }

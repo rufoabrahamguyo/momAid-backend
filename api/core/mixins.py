@@ -1,5 +1,5 @@
-from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.response import Response
 
 
 class SuccessResponseMixin:
@@ -13,7 +13,9 @@ class SuccessResponseMixin:
                 return self.success(data={"id": 1}, message="Created.", status=201)
     """
 
-    def success(self, data=None, message: str = None, status_code: int = status.HTTP_200_OK):
+    def success(
+        self, data=None, message: str = None, status_code: int = status.HTTP_200_OK
+    ):
         return Response(
             {"status": "success", "message": message, "data": data},
             status=status_code,

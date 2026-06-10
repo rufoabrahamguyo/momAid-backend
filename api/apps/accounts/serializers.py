@@ -16,8 +16,10 @@ class PartnerProfileSerializer(serializers.ModelSerializer):
 
 
 class MotherProfileSerializer(serializers.ModelSerializer):
-    user    = serializers.UUIDField(source="user.public_id", read_only=True)
-    partner = serializers.UUIDField(source="partner.public_id", read_only=True, allow_null=True)
+    user = serializers.UUIDField(source="user.public_id", read_only=True)
+    partner = serializers.UUIDField(
+        source="partner.public_id", read_only=True, allow_null=True
+    )
     current_pregnancy_week = serializers.SerializerMethodField()
 
     class Meta:
@@ -36,7 +38,7 @@ class MotherProfileSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    image   = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
     profile = serializers.SerializerMethodField()
 
     class Meta:
@@ -72,23 +74,24 @@ class UserSerializer(serializers.ModelSerializer):
         return None
 
 
-
-
 class RegisterSerializer(serializers.Serializer):
-    email    = serializers.EmailField()
+    email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=8)
-    role     = serializers.ChoiceField(choices=User.Role.choices)
+    role = serializers.ChoiceField(choices=User.Role.choices)
 
     def validate_email(self, value):
         from .selectors import user_exists
+
         if user_exists(email=value):
-            raise serializers.ValidationError("An account with this email already exists.")
+            raise serializers.ValidationError(
+                "An account with this email already exists."
+            )
         return value.strip().lower()
 
 
 class VerifyOTPSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    otp   = serializers.CharField(min_length=6, max_length=6)
+    otp = serializers.CharField(min_length=6, max_length=6)
 
     def validate_email(self, value):
         return value.strip().lower()

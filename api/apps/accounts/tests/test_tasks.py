@@ -1,8 +1,10 @@
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from django.core import mail
 
-from apps.accounts.tasks import send_otp_email, cleanup_expired_tokens
+from apps.accounts.tasks import cleanup_expired_tokens, send_otp_email
+
 from .factories import MotherUserFactory
 
 
@@ -22,7 +24,10 @@ class TestSendOtpEmail:
         assert "verify" in mail.outbox[0].subject.lower()
 
     def test_retries_on_failure(self):
-        with patch("django.core.mail.EmailMessage.send", side_effect=[Exception("SMTP error"), None]):
+        with patch(
+            "django.core.mail.EmailMessage.send",
+            side_effect=[Exception("SMTP error"), None],
+        ):
             # Should not raise — autoretry handles it
             try:
                 send_otp_email("retry@example.com", "999999")
@@ -37,8 +42,9 @@ class TestCleanupExpiredTokens:
         cleanup_expired_tokens()
 
     def test_deletes_expired_tokens(self):
-        from django.utils import timezone
         from datetime import timedelta
+
+        from django.utils import timezone
         from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
         from rest_framework_simplejwt.tokens import RefreshToken
 

@@ -1,8 +1,9 @@
 import pytest
-from rest_framework.test import APIClient
-from .factories import MotherUserFactory, PartnerUserFactory, InactiveUserFactory
-from rest_framework.throttling import BaseThrottle
 from django.core.cache import cache
+from rest_framework.test import APIClient
+
+from .factories import InactiveUserFactory, MotherUserFactory, PartnerUserFactory
+
 
 @pytest.fixture
 def api_client():
@@ -36,20 +37,18 @@ def partner_auth_client(api_client, partner_user):
     return api_client
 
 
-
-
 # @pytest.fixture(autouse=True)
 # def disable_all_throttling(monkeypatch):
 
 #     from rest_framework.views import APIView
 #     monkeypatch.setattr(APIView, "check_throttles", lambda self, request: None)
-    
+
 
 #     monkeypatch.setattr(BaseThrottle, "allow_request", lambda self, request, view: True)
+
 
 @pytest.fixture(autouse=True)
 def reset_throttle_cache():
 
     cache.clear()
     yield
-    

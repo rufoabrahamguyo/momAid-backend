@@ -1,31 +1,38 @@
-from django.db import models
-import string
 import secrets
+import string
+import uuid
 from datetime import timedelta
-from django.utils import timezone
-import time
+
 from django.contrib.auth import get_user_model
+from django.db import models
+from django.utils import timezone
 
 User = get_user_model()
-import uuid
+
 
 class BaseModel(models.Model):
-    public_id = models.UUIDField(primary_key=False, default=uuid.uuid4, editable=False, null=True, blank=True)
+    public_id = models.UUIDField(
+        primary_key=False, default=uuid.uuid4, editable=False, null=True, blank=True
+    )
 
     class Meta:
         abstract = True
 
+
 class InviteCode(BaseModel):
-    creator = models.OneToOneField(User, on_delete=models.CASCADE, related_name="active_code")
+    creator = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="active_code"
+    )
     code = models.CharField(unique=True, max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
 
-
     @classmethod
     def generate_unique_code(cls):
         while True:
-            code = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+            code = "".join(
+                secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6)
+            )
 
             if not cls.objects.filter(code=code).exists():
                 return code
@@ -37,7 +44,7 @@ class InviteCode(BaseModel):
         if not self.code:
             self.code = self.generate_unique_code()
 
-        super().save(*args,**kwargs)
+        super().save(*args, **kwargs)
 
     @property
     def is_expired(self):
@@ -46,25 +53,28 @@ class InviteCode(BaseModel):
     def __str__(self):
         return f"{self.code} (For: {self.creator.email})"
 
+
 class PartnerTask(BaseModel):
     CATEGORY_CHOICES = [
-        ('health', 'Health & Nutrition'),
-        ('logistics', 'Planning & Logistics'),
-        ('emotional', 'Emotional Support'),
-        ('prep', 'Nursery & Gear'),
+        ("health", "Health & Nutrition"),
+        ("logistics", "Planning & Logistics"),
+        ("emotional", "Emotional Support"),
+        ("prep", "Nursery & Gear"),
     ]
 
     title = models.CharField(max_length=100)
     description = models.TextField()
-    why_it_matters = models.TextField(blank=True, null=True) 
-    
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='logistics')
+    why_it_matters = models.TextField(blank=True, null=True)
+
+    category = models.CharField(
+        max_length=20, choices=CATEGORY_CHOICES, default="logistics"
+    )
     baby_age_weeks_min = models.IntegerField()
     baby_age_weeks_max = models.IntegerField()
     is_recurring = models.BooleanField(default=False)
 
     icon = models.CharField(max_length=10, default="🤝")
-    estimated_time = models.CharField(max_length=20, blank=True) 
+    estimated_time = models.CharField(max_length=20, blank=True)
     order = models.IntegerField(default=0)
 
     class Meta:
@@ -82,29 +92,22 @@ class PartnerTask(BaseModel):
     def __str__(self):
         return f"Week {self.baby_age_weeks_min}: {self.title}"
 
+
 class PartnerTaskCompletion(BaseModel):
 
     partner = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE, 
-        related_name="completions"
+        User, on_delete=models.CASCADE, related_name="completions"
     )
     task = models.ForeignKey(
-        PartnerTask,
-        on_delete=models.CASCADE, related_name="partner_tasks")
-    status = models.CharField(max_length=20, default="completed") 
+        PartnerTask, on_delete=models.CASCADE, related_name="partner_tasks"
+    )
+    status = models.CharField(max_length=20, default="completed")
     notes = models.TextField(null=True, blank=True)
     completed_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('partner', 'task')
-        ordering = ['-completed_at']
+        unique_together = ("partner", "task")
+        ordering = ["-completed_at"]
 
     def __str__(self):
         return f"{self.partner.email} - {self.task.title}"
-
-
-    
-
-
-
