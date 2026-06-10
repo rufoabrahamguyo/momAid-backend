@@ -1,298 +1,468 @@
-# 🔐 Authentication & Identity API
+# Authentication And Profile API
 
-This module handles user onboarding, security, and profile customization for the MumAid platform.
+Purpose: document MomAid account creation, OTP activation, JWT session management, and profile endpoints exactly as implemented in `apps.accounts`.
 
----
+Base path:
 
-## 🚀 Authentication Flow
+```txt
+/api/auth/
+```
 
-1. **Register**: Create an account (default status: inactive).
-2. **Verify**: Submit the OTP sent to your email to activate the account.
-3. **Login**: Exchange credentials for JWT access and refresh tokens.
-4. **Authorize**: Include the access token in the header of all protected requests.
+Authentication header for protected endpoints:
 
----
+```http
+Authorization: Bearer <access_token>
+```
 
-## 1. Register User
+## Data Model
 
-Create a new account. An OTP will be sent to the provided email address for verification.
+`accounts.User` fields exposed by `UserSerializer`:
 
-**Endpoint:** `POST api/auth/v1/register/`
+| Field | Type | Notes |
+| --- | --- | --- |
+| `public_id` | UUID | Public user identifier. |
+| `email` | string | Unique login identifier. |
+| `username` | string or null | Optional display name. |
+| `image` | URL string or null | Secure Cloudinary URL when set. |
+| `role` | string | One of `mother`, `partner`, `admin`. |
+| `is_active` | boolean | Account active flag. |
+| `joined_at` | ISO datetime | Creation timestamp. |
+| `updated_at` | ISO datetime | Update timestamp. |
+| `profile` | object or null | `MotherProfileSerializer`, `PartnerProfileSerializer`, or null for admin. |
 
-### Request Body
+`MotherProfile` response fields:
 
 ```json
 {
-  "email": "user@example.com",
+  "public_id": "4244a0e8-7984-44e7-a706-8febc8641580",
+  "user": "9a8be513-245e-454a-972f-91d2436e658f",
+  "baby_due_date": "2026-12-25",
+  "baby_birth_date": null,
+  "partner": null,
+  "current_pregnancy_week": 10
+}
+```
+
+`PartnerProfile` response fields:
+
+```json
+{
+  "public_id": "58aaf586-cd5a-4c7a-a600-49af77b81dd7",
+  "user": "9a8be513-245e-454a-972f-91d2436e658f"
+}
+```
+
+## Register
+
+Create a user and send an activation OTP.
+
+```txt
+POST /api/auth/v1/register/
+```
+
+Auth: public.
+
+Request:
+
+```json
+{
+  "email": "mother@example.com",
   "password": "securepassword123",
   "role": "mother"
 }
 ```
 
-> Supported roles: `mother`, `partner`
+Accepted roles:
 
-### Response
+```txt
+mother
+partner
+admin
+```
+
+Validation:
+
+- `email` must be a valid unique email address.
+- `password` must be at least 8 characters.
+- `role` must be one of `User.Role.choices`.
+
+Success: `201 Created`
 
 ```json
 {
-  "detail": "User created. Please activate your account.",
-  "status": 201
+  "detail": "Registration successful. Check your email for the activation code."
 }
 ```
 
----
-
-## 2. Verify OTP
-
-Activate the account using the 6-digit code sent via email.
-
-**Endpoint:** `POST api/auth/v1/verify/token/`
-
-### Request Body
+Duplicate email error: `400 Bad Request`
 
 ```json
 {
-  "email": "user@example.com",
+  "status": "error",
+  "message": "Validation failed.",
+  "errors": {
+    "email": [
+      "An account with this email already exists."
+    ]
+  }
+}
+```
+
+## Verify OTP
+
+Activate an account and issue JWT tokens.
+
+```txt
+POST /api/auth/v1/verify/token/
+```
+
+Auth: public.
+
+Request:
+
+```json
+{
+  "email": "mother@example.com",
   "otp": "123456"
 }
 ```
 
-### Response
+Validation:
+
+- `email` is normalized to lowercase.
+- `otp` must be exactly 6 characters.
+
+Success: `200 OK`
 
 ```json
 {
-  "detail": "Email verified successfully",
-  "status": 200,
-  "access": "access_token_string",
-  "refresh": "refresh_token_string",
+  "detail": "Account activated.",
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
----
-
-## 3. Login (Standard)
-
-Authenticate and receive JWT tokens for session management.
-
-**Endpoint:** `POST api/auth/v1/login/`
-
-### Request Body
+Invalid or expired OTP: `401 Unauthorized`
 
 ```json
 {
-  "email": "user@example.com",
+  "detail": "Invalid or expired activation code."
+}
+```
+
+The exact `detail` text comes from `services.activate_user()`.
+
+## Resend OTP
+
+Request a new activation OTP.
+
+```txt
+POST /api/auth/v1/resend-otp/
+```
+
+Auth: public.
+
+Request:
+
+```json
+{
+  "email": "mother@example.com"
+}
+```
+
+Success: `200 OK`
+
+```json
+{
+  "detail": "If the email exists, a new code has been sent."
+}
+```
+
+The response does not reveal whether the account exists.
+
+## Login
+
+Issue Simple JWT tokens for an active user.
+
+```txt
+POST /api/auth/v1/login/
+```
+
+Auth: public.
+
+Request:
+
+```json
+{
+  "email": "mother@example.com",
   "password": "securepassword123"
 }
 ```
 
-### Response
+Success: `200 OK`
 
 ```json
 {
-  "access": "access_token_string",
-  "refresh": "refresh_token_string",
-  "status": 200
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-<!-- ---
-
-## 4. Google Social Login
-
-Authenticate using a Google ID token provided by the frontend integration.
-
-**Endpoint:** `POST api/auth/v1/google/social-login/`
-
-### Request Body
+Invalid credentials: `401 Unauthorized`
 
 ```json
 {
-  "token": "GOOGLE_ID_TOKEN_HERE"
+  "status": "error",
+  "message": "No active account found with the given credentials",
+  "errors": null
 }
 ```
 
-### Response
+## Refresh Token
+
+Rotate a refresh token and issue a new access token.
+
+```txt
+POST /api/auth/v1/login/refresh/token/
+```
+
+Auth: public.
+
+Request:
 
 ```json
 {
-  "access": "access_token_here",
-  "refresh": "refresh_token_here",
-  "status": 200
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
-``` -->
+```
 
----
-
-## 4. Token Management
-
-### Refresh Token
-
-Generate a new access token when the current one expires.
-
-**Endpoint:** `POST api/auth/v1/login/refresh/token/`
+Success: `200 OK`
 
 ```json
 {
-  "refresh": "your_refresh_token"
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-### 5. Logout
+Refresh token behavior:
 
-Blacklist the refresh token to end the session securely.
+- `ROTATE_REFRESH_TOKENS=True`
+- `BLACKLIST_AFTER_ROTATION=True`
+- access token lifetime is 120 minutes
+- refresh token lifetime is 1 day
 
-**Endpoint:** `POST api/auth/v1/logout/`
+## Logout
+
+Blacklist a refresh token.
+
+```txt
+POST /api/auth/v1/logout/
+```
+
+Auth: required.
+
+Request:
 
 ```json
 {
-  "refresh": "your_refresh_token"
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-**Success Response:** `205 Reset Content`
+Success: `204 No Content`
 
----
-
-## 6. User Profile
-
-### Get Current User (whoami)
-
-Retrieve details of the currently authenticated user.
-
-**Endpoint:** `GET api/auth/v1/whoami/`
-
-**Header:**
-
-```
-Authorization: Bearer <access_token>
+```txt
+No response body
 ```
 
-### Response
+Missing refresh token: `400 Bad Request`
+
+```json
+{
+  "detail": "Refresh token required."
+}
+```
+
+Invalid refresh token: `400 Bad Request`
+
+```json
+{
+  "detail": "Invalid or expired token."
+}
+```
+
+## Current User
+
+Return the authenticated user and role-specific profile.
+
+```txt
+GET /api/auth/v1/whoami/
+```
+
+Auth: required.
+
+Success: `200 OK`
 
 ```json
 {
   "public_id": "9a8be513-245e-454a-972f-91d2436e658f",
-    "email": "test1@gmail.com",
-    "username": "test1",
-    "image": "https://res.cloudinary.com/deynddrmf/image/upload/v1/profile_pics/user_1",
-    "role": "mother",
-    "is_active": true,
-    "is_staff": false,
-    "is_superuser": false,
-    "joined_at": "2026-05-02T17:11:37.204474Z",
-    "updated_at": "2026-05-14T11:43:20.367781Z",
-    "profile": {
-        "public_id": "4244a0e8-7984-44e7-a706-8febc8641580",
-        "user": "9a8be513-245e-454a-972f-91d2436e658f",
-        "baby_due_date": "2026-12-25",
-        "baby_birth_date": "2026-12-24",
-        "partner": null
-    }
+  "email": "mother@example.com",
+  "username": "njeri",
+  "image": "https://res.cloudinary.com/momaid/image/upload/v1/profile_pics/user_1",
+  "role": "mother",
+  "is_active": true,
+  "joined_at": "2026-05-02T17:11:37.204474Z",
+  "updated_at": "2026-05-14T11:43:20.367781Z",
+  "profile": {
+    "public_id": "4244a0e8-7984-44e7-a706-8febc8641580",
+    "user": "9a8be513-245e-454a-972f-91d2436e658f",
+    "baby_due_date": "2026-12-25",
+    "baby_birth_date": null,
+    "partner": null,
+    "current_pregnancy_week": 10
+  }
 }
 ```
 
----
+## Update User Profile
 
-### 7. Upload Profile Image
+Partially update `username` and/or `email`.
 
-Update the user's avatar. Images are stored and served via Cloudinary.
+```txt
+PATCH /api/auth/v1/update/user/
+```
 
-**Endpoint:** `PUT api/auth/v1/profile/image/`
+Auth: required.
 
-* **Method:** PUT
-* **Header:** Authorization: Bearer <access_token>
-* **Type:** multipart/form-data
-
-### Fields
-
-* `profile_pic`: (File) - .jpg, .jpeg, or .png (Max 10MB)
-
-### Success Response
+Request:
 
 ```json
 {
-  "detail": "Profile image updated",
-  "url": "https://res.cloudinary.com/momaid/image/upload/v123/profile.jpg",
-  "status": 200
+  "username": "njeri",
+  "email": "new-email@example.com"
 }
 ```
 
----
+Success: `200 OK`
 
-## 7. Verify OTP
+The response is the full `UserSerializer` body.
 
-Resend the otp back to the user.
-
-**Endpoint:** `POST api/auth/v1/resend-otp`
-
-### Request Body
+Validation error: `400 Bad Request`
 
 ```json
 {
-  "email": "user@example.com",
+  "status": "error",
+  "message": "Validation failed.",
+  "errors": {
+    "email": [
+      "Enter a valid email address."
+    ]
+  }
 }
 ```
 
-### Response
+## Update Mother Profile
 
-```json
-{
-  "detail": "If the email exists, a code has been sent.",
-}
+Partially update pregnancy and baby dates for a mother profile.
+
+```txt
+PATCH /api/auth/v1/update/mother/
 ```
 
----
+Auth: required.
 
-## 8. Update User Profile
+Request:
 
-Update user profile by passing in email/username or both.
-
-**Endpoint:** `POST api/auth/v1/update/user/`
-
-### Request Body
-```json
-{
-  "email": "",
-  "username": ""
-}
-```
-
-### Response
-```json
-{
-  "detail": "User Profile updated successfully"
-}
-```
-
----
-
-## 9. Update Mother Profile
-
-Update mother profile. 
-
-**Endpoint:** `POST api/auth/v1/update/mother/`
-
-### Request Body
 ```json
 {
   "baby_due_date": "2026-12-25",
-  "baby_birth_date": "2026-12-24",
+  "baby_birth_date": null
 }
 ```
 
-### Response
+Success: `200 OK`
+
 ```json
 {
-  "detail": "Mother Profile updated successfully"
+  "detail": "Profile updated."
 }
 ```
 
----
+No mother profile: `404 Not Found`
 
-## ⚠️ Common Error Codes
+```json
+{
+  "detail": "Mother profile not found."
+}
+```
 
-| Status | Detail                                           |
-| ------ | ------------------------------------------------ |
-| 400    | Missing required fields or invalid OTP           |
-| 401    | Token expired, invalid, or incorrect credentials |
-| 412>=530  | Image file size too large (exceeds 10MB limit)   |
+The exact `detail` text comes from `services.update_mother_profile()`.
+
+## Upload Profile Image
+
+Upload or replace the authenticated user's profile image.
+
+```txt
+PUT /api/auth/v1/profile/image/
+```
+
+Auth: required.
+
+Content type:
+
+```txt
+multipart/form-data
+```
+
+Form fields:
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `profile_pic` | file | Yes | Passed to `services.upload_profile_image()`. |
+
+cURL:
+
+```bash
+curl -X PUT http://localhost:8000/api/auth/v1/profile/image/ \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -F "profile_pic=@./avatar.jpg"
+```
+
+Success: `200 OK`
+
+```json
+{
+  "detail": "Profile image updated.",
+  "url": "https://res.cloudinary.com/momaid/image/upload/v123/profile.jpg"
+}
+```
+
+Missing file: `400 Bad Request`
+
+```json
+{
+  "detail": "Image file is required."
+}
+```
+
+## Rate Limits
+
+Auth routes are limited by both DRF throttles and `GlobalRateLimiter`.
+
+| Path fragment | Scope | Limit |
+| --- | --- | --- |
+| `register` | `login_limit` | `5/minute` |
+| `login` | `login_limit` | `5/minute` |
+| `verify` | `otp_limit` | `3/minute` |
+| `resend-otp` | `otp_limit` | `3/minute` |
+| `profile/image` | `upload_limit` | `5/day` |
+
+Rate-limit response:
+
+```json
+{
+  "detail": "Too many requests.",
+  "retry_after": 42
+}
+```
