@@ -28,6 +28,7 @@ class MumChatReplySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Reply cannot be blank.")
         return value.strip()
 
+
 class MumChatCreateReplySerializer(serializers.ModelSerializer):
 
     class Meta:
