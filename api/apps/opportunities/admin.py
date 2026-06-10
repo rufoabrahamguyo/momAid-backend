@@ -5,7 +5,6 @@ import csv
 from django.contrib import admin
 from django.db.models import Count
 from django.http import HttpResponse
-from django.utils.html import format_html
 
 from apps.opportunities.models import Opportunity, OpportunityInterest
 

@@ -1,5 +1,6 @@
-from .base import *
 import ssl
+
+from .base import *
 
 DEBUG = False
 
@@ -127,8 +128,8 @@ SENTRY_DSN = env("SENTRY_DSN", default="")
 
 if SENTRY_DSN:
     import sentry_sdk
-    from sentry_sdk.integrations.django import DjangoIntegration
     from sentry_sdk.integrations.celery import CeleryIntegration
+    from sentry_sdk.integrations.django import DjangoIntegration
     from sentry_sdk.integrations.redis import RedisIntegration
 
     sentry_sdk.init(

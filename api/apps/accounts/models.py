@@ -1,14 +1,14 @@
 import uuid
-from django.db import models
+
+from cloudinary.models import CloudinaryField
+from core.models import TimeStampedModel
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
     PermissionsMixin,
 )
+from django.db import models
 from django.utils import timezone
-from cloudinary.models import CloudinaryField
-
-from core.models import TimeStampedModel
 
 
 class UserManager(BaseUserManager):

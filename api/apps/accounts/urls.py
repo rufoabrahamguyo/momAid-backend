@@ -1,21 +1,21 @@
 from django.urls import path
-from .views import (
-    RegisterView,
-    LogoutView,
-    VerifyOTPView,
-    CurrentUserView,
-    ProfileImageView,
-    # GoogleSocialLoginView,
-    ResendOTPView,
-    UpdateMotherProfileView,
-    UpdateUserProfileView,
-)
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
 
-from rest_framework.throttling import ScopedRateThrottle
+from .views import (
+    CurrentUserView,
+    LogoutView,
+    ProfileImageView,
+    RegisterView,
+    # GoogleSocialLoginView,
+    ResendOTPView,
+    UpdateMotherProfileView,
+    UpdateUserProfileView,
+    VerifyOTPView,
+)
 
 
 class ThrottledCustomTokenPairView(TokenObtainPairView):

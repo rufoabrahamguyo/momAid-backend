@@ -7,9 +7,9 @@ from django.core.cache import cache
 from django.db import transaction
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import MotherProfile, PartnerProfile
-from .selectors import get_user_by_email, user_exists
 from . import tasks
+from .models import MotherProfile, PartnerProfile
+from .selectors import get_user_by_email
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -97,9 +97,9 @@ def google_login(*, token: str) -> tuple[User, dict, bool]:
     Verify Google ID token, get-or-create user, return (user, tokens, created).
     Raises ValueError if token is invalid.
     """
-    from google.oauth2 import id_token
-    from google.auth.transport import requests as google_requests
     from django.conf import settings
+    from google.auth.transport import requests as google_requests
+    from google.oauth2 import id_token
 
     try:
         idinfo = id_token.verify_oauth2_token(

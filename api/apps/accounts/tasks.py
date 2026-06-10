@@ -38,7 +38,6 @@ def cleanup_expired_tokens(self) -> None:
     from django.utils import timezone
     from rest_framework_simplejwt.token_blacklist.models import (
         OutstandingToken,
-        BlacklistedToken,
     )
 
     deleted, _ = OutstandingToken.objects.filter(expires_at__lt=timezone.now()).delete()

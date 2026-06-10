@@ -1,11 +1,13 @@
-import pytest
-from datetime import date, timedelta
-from django.utils import timezone
-from django.db import IntegrityError
-from django.contrib.auth import get_user_model
+from datetime import timedelta
 
-from apps.accounts.models import MotherProfile, PartnerProfile
-from .factories import MotherUserFactory, PartnerUserFactory, MotherProfileFactory
+import pytest
+from django.contrib.auth import get_user_model
+from django.db import IntegrityError
+from django.utils import timezone
+
+from apps.accounts.models import MotherProfile
+
+from .factories import MotherProfileFactory, MotherUserFactory, PartnerUserFactory
 
 User = get_user_model()
 

@@ -1,24 +1,21 @@
 import logging
 
+from core.throttles import LoginRateThrottle, OtpRateThrottle, UploadRateThrottle
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.throttling import ScopedRateThrottle
-
-from core.throttles import LoginRateThrottle, OtpRateThrottle, UploadRateThrottle
 
 from . import services
 from .serializers import (
     RegisterSerializer,
-    UserSerializer,
-    UpdateUserProfileSerializer,
-    UpdateMotherProfileSerializer,
-    VerifyOTPSerializer,
     ResendOTPSerializer,
-    GoogleLoginSerializer,
+    UpdateMotherProfileSerializer,
+    UpdateUserProfileSerializer,
+    UserSerializer,
+    VerifyOTPSerializer,
 )
 
 logger = logging.getLogger(__name__)

@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import PartnerTask, PartnerTaskCompletion, InviteCode
+
+from .models import InviteCode, PartnerTask, PartnerTaskCompletion
 
 
 @admin.register(PartnerTask)

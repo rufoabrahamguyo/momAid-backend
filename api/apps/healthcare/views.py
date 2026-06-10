@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from core.renderers import haversine_distance_km
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.renderers import haversine_distance_km
 from apps.healthcare.models import EmergencyContact, Hospital
 from apps.healthcare.serializers import (
     EmergencyContactSerializer,
@@ -97,10 +97,11 @@ class EmergencyTriggerView(APIView):
     def post(self, request) -> Response:
         ser = EmergencyTriggerSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
-        lat = ser.validated_data["location_lat"]
-        lng = ser.validated_data["location_lng"]
+        _lat = ser.validated_data["location_lat"]
+        _lng = ser.validated_data["location_lng"]
         user = request.user
-        user_name = str(user.phone)
+        _user_name = str(user.phone)
+
         phones = []
         if user.support_person_phone:
             phones.append(user.support_person_phone)

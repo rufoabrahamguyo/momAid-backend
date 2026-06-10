@@ -1,10 +1,11 @@
 import secrets
-import requests
-from django.core.cache import cache
-from .tasks import send_otp_email
+
 from django.conf import settings
-from google.oauth2 import id_token
+from django.core.cache import cache
 from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
+
+from .tasks import send_otp_email
 
 
 def generate_email_otp(email: str) -> str:

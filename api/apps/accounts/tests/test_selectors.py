@@ -2,7 +2,8 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from apps.accounts import selectors
-from .factories import MotherUserFactory, PartnerUserFactory, InactiveUserFactory
+
+from .factories import InactiveUserFactory, MotherUserFactory, PartnerUserFactory
 
 User = get_user_model()
 

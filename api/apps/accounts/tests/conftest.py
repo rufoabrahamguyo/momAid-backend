@@ -1,8 +1,8 @@
 import pytest
-from rest_framework.test import APIClient
-from .factories import MotherUserFactory, PartnerUserFactory, InactiveUserFactory
-from rest_framework.throttling import BaseThrottle
 from django.core.cache import cache
+from rest_framework.test import APIClient
+
+from .factories import InactiveUserFactory, MotherUserFactory, PartnerUserFactory
 
 
 @pytest.fixture

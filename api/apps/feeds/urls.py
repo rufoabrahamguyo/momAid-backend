@@ -1,14 +1,15 @@
 from django.urls import path
+
 from .views import (
-    UploadUserVideoView,
-    GetAllVideosView,
-    UserSpecificVideoView,
-    ListVideoCommentsView,
-    CreateVideoCommentView,
-    ReplyCommentView,
-    CreateVideoHistoryView,
     ContinueWatchingView,
+    CreateVideoCommentView,
+    CreateVideoHistoryView,
+    GetAllVideosView,
+    ListVideoCommentsView,
     ListVideoHistoryView,
+    ReplyCommentView,
+    UploadUserVideoView,
+    UserSpecificVideoView,
 )
 
 urlpatterns = [

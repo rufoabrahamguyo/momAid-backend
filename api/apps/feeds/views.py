@@ -1,19 +1,16 @@
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.db.models import F, Q
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
-import cloudinary.uploader
 
+from .models import Comment, Video, VideoHistory
+from .paginator import CommentLimitPaginator, VideoCursorPaginator
 from .serializers import (
-    VideoSerializer,
-    CommentSerializer,
     CommentListSerializer,
+    CommentSerializer,
     VideoHistorySerializer,
+    VideoSerializer,
 )
-from .models import Video, Comment, VideoHistory
-from .paginator import VideoCursorPaginator, CommentLimitPaginator
-from django.shortcuts import get_object_or_404
-from django.db.models import F, Q
 
 
 class UploadUserVideoView(APIView):

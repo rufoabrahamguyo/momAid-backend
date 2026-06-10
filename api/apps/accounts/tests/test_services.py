@@ -3,14 +3,16 @@ Accounts service tests.
 Business logic lives in services — so most of your meaningful tests live here.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from django.core.cache import cache
 from django.contrib.auth import get_user_model
-from unittest.mock import patch, MagicMock
+from django.core.cache import cache
 
 from apps.accounts import services
 from apps.accounts.models import MotherProfile, PartnerProfile
-from .factories import MotherUserFactory, PartnerUserFactory, InactiveUserFactory
+
+from .factories import MotherUserFactory, PartnerUserFactory
 
 User = get_user_model()
 

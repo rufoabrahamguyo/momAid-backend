@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import VideoAttributes, Video, Comment, VideoHistory
+
+from .models import Comment, Video, VideoAttributes, VideoHistory
 
 
 class VideoAttributesSerializer(serializers.ModelSerializer):

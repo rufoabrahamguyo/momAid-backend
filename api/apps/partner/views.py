@@ -1,23 +1,22 @@
 import logging
-from django.shortcuts import get_object_or_404
-from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from datetime import timedelta, timezone
+
+from django.contrib.auth import get_user_model
+from django.db import transaction
+from rest_framework import generics
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import PartnerTask, PartnerTaskCompletion, InviteCode
+from .models import InviteCode, PartnerTask, PartnerTaskCompletion
 from .paginator import TaskLimitPaginator
-
 from .serializers import (
     PartnerTaskCompletionSerializer,
     PartnerTaskSerializer,
 )
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
-
-from datetime import timezone, timedelta
 
 
 class GenerateCodeView(APIView):
@@ -37,7 +36,7 @@ class GenerateCodeView(APIView):
                 status=200,
             )
 
-        except Exception as e:
+        except Exception:
             logger.exception(
                 "Failed to generate invite code for user %s", request.user.id
             )
@@ -85,7 +84,6 @@ class CreatePartnerTaskView(APIView):
     permission_classes = [IsAdminUser]
 
     def post(self, request):
-        user = request.user
 
         serializer = PartnerTaskSerializer(data=request.data)
 

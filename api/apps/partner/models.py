@@ -1,13 +1,13 @@
-from django.db import models
-import string
 import secrets
+import string
+import uuid
 from datetime import timedelta
-from django.utils import timezone
-import time
+
 from django.contrib.auth import get_user_model
+from django.db import models
+from django.utils import timezone
 
 User = get_user_model()
-import uuid
 
 
 class BaseModel(models.Model):

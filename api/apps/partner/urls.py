@@ -1,12 +1,13 @@
 from django.urls import path
+
 from .views import (
-    GenerateCodeView,
-    LinkPartnerView,
     CreatePartnerTaskCompletionView,
     CreatePartnerTaskView,
-    ListPartnerTaskView,
-    ListPartnerTaskCompletion,
+    GenerateCodeView,
+    LinkPartnerView,
     ListAdminPartnerTasksView,
+    ListPartnerTaskCompletion,
+    ListPartnerTaskView,
 )
 
 urlpatterns = [

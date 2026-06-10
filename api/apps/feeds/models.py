@@ -1,11 +1,9 @@
-from django.db import models
+import uuid
 
 # from cloudinary.models import CloudinaryField
 from django.contrib.auth import get_user_model
 from django.core.files.storage import storages
-from django.conf import settings
-
-import uuid
+from django.db import models
 
 User = get_user_model()
 

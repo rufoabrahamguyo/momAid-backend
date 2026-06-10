@@ -1,10 +1,11 @@
-import pytest
-from django.urls import reverse
-from django.core.cache import cache
 from unittest.mock import patch
 
+import pytest
+from django.core.cache import cache
+
 from apps.accounts import services
-from .factories import MotherUserFactory, PartnerUserFactory, InactiveUserFactory
+
+from .factories import InactiveUserFactory, MotherUserFactory
 
 
 @pytest.mark.django_db

@@ -1,11 +1,11 @@
 from django.urls import path
 
 from .views import (
-    MumTalkPostCreateView,
-    MumTalkPostListView,
-    MumTalkPostDetailView,
-    MumTalkPostDeleteView,
     MumTalkListUserPostsView,
+    MumTalkPostCreateView,
+    MumTalkPostDeleteView,
+    MumTalkPostDetailView,
+    MumTalkPostListView,
     MumTalkPostUpdateView,
     MumTalkReplyCreateView,
 )

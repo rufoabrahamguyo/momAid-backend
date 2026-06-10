@@ -6,6 +6,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import (
     BaseUserCreationForm,
+)
+from django.contrib.auth.forms import (
     UserChangeForm as AuthUserChangeForm,
 )
 from django.core.exceptions import ValidationError

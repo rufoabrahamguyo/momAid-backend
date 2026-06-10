@@ -38,3 +38,6 @@ htmlcov/
 /media
 
 .pytest_cache
+
+
+*cache
