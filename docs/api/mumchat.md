@@ -1,28 +1,67 @@
 # MumChat API
 
-MumChat is the anonymous community posting feature. A signed-in user can create posts, and the backend stores ownership as a salted `author_hash` instead of exposing the user record. Frontend clients never receive `author_hash`, user id, email, username, or profile data from MumTalk responses.
+Purpose: document anonymous community posts and nested replies implemented by `apps.mumchat`.
 
 Base path:
 
 ```txt
-api/mumchat/
+/api/mumchat/
 ```
 
-Authentication uses the normal JWT header for protected endpoints:
+Protected endpoints require:
 
-```txt
+```http
 Authorization: Bearer <access_token>
 ```
 
-## Data Model
+Public endpoints:
 
-A MumChat post returned to the frontend has this shape:
+```txt
+GET /api/mumchat/v1/posts/
+GET /api/mumchat/v1/posts/<post_id>/
+```
+
+## Privacy Model
+
+MumChat stores ownership as a salted hash, not as serialized user identity.
+
+Implementation:
+
+```txt
+core.renderers.hash_user_identity(request.user.id)
+```
+
+Stored fields:
+
+```txt
+MumChatPost.author_hash
+MumChatReply.author_replier_hash
+```
+
+The API never returns `author_hash`, `author_replier_hash`, user id, email, username, or profile data from MumChat serializers. Ownership checks for update and delete compare the authenticated user's hash with the stored hash.
+
+`ANONYMOUS_SALT` must remain stable per environment. Changing it prevents existing posts from matching their original authors.
+
+## Post Response Shape
+
+`MumChatPostSerializer` returns:
 
 ```json
 {
   "public_id": "1cfa39e2-7f25-4e71-91e2-b9b4f8c71f57",
   "title": "Feeling anxious today",
   "content": "Has anyone else felt this way in the third trimester?",
+  "reply_count": 1,
+  "replies": [
+    {
+      "public_id": "8f7c8f10-8e6b-4504-944f-85c0b2c23235",
+      "content": "I understand how you feel.",
+      "parent_reply": null,
+      "is_root_reply": true,
+      "children": [],
+      "created_at": "2026-06-05T15:00:00Z"
+    }
+  ],
   "created_at": "2026-06-05T14:28:00Z",
   "updated_at": "2026-06-05T14:28:00Z"
 }
@@ -30,105 +69,60 @@ A MumChat post returned to the frontend has this shape:
 
 Fields:
 
-| Field | Type | Frontend notes |
+| Field | Type | Notes |
 | --- | --- | --- |
-| `public_id` | UUID string | Public post identifier. Use this as `post_id` in detail, update, and delete paths. |
-| `title` | string or null | Optional, max 255 characters, currently unique across all MumTalk posts. |
-| `content` | string or null | Optional, max 300 characters. |
-| `created_at` | ISO datetime string | Read-only. |
-| `updated_at` | ISO datetime string | Read-only. |
-
-Important current constraints:
-
-- The create/update serializer accepts only `title` and `content` from the frontend.
-- `public_id`, `created_at`, and `updated_at` are read-only.
-- `author_hash` is backend-only and is never returned.
-- There are no likes, comments, categories, images, author display names, or search filters in the current MumChat API.
+| `public_id` | UUID | Use this as `<post_id>` in URLs. |
+| `title` | string or null | Unique model field, max 255 characters, validated non-blank when supplied. |
+| `content` | string or null | Max 300 characters, validated non-blank when supplied. |
+| `reply_count` | integer | Count of all replies related to the post. |
+| `replies` | array | Root replies only; nested replies are under `children`. |
+| `created_at` | ISO datetime | Read-only. |
+| `updated_at` | ISO datetime | Read-only. |
 
 ## Pagination
 
-List endpoints use page-number pagination.
+List endpoints use `MumChatPagination`:
 
-Defaults:
+```txt
+page_size = 20
+page_size_query_param = page_size
+max_page_size = 100
+```
 
-- `page_size`: `20`
-- `max_page_size`: `100`
-
-Query params:
-
-| Param | Example | Meaning |
-| --- | --- | --- |
-| `page` | `?page=2` | Page number to fetch. |
-| `page_size` | `?page_size=50` | Number of posts per page, capped at 100. |
-
-Paginated response shape:
+Response:
 
 ```json
 {
   "count": 42,
-  "next": "http://api.site.com/api/mumtalk/v1/posts/?page=2",
+  "next": "http://localhost:8000/api/mumchat/v1/posts/?page=2",
   "previous": null,
-  "results": [
-    {
-      "public_id": "1cfa39e2-7f25-4e71-91e2-b9b4f8c71f57",
-      "title": "Feeling anxious today",
-      "content": "Has anyone else felt this way in the third trimester?",
-      "created_at": "2026-06-05T14:28:00Z",
-      "updated_at": "2026-06-05T14:28:00Z"
-    }
-  ]
+  "results": []
 }
 ```
 
-Posts are ordered newest first by `created_at`.
+Posts are ordered by `MumChatPost.Meta.ordering = ["-created_at"]`.
 
-## Current Paths
+## Endpoint Summary
 
-| Method | Path | Auth | Current behavior |
+| Method | Path | Auth | Behavior |
 | --- | --- | --- | --- |
-| `GET` | `api/mumchat/v1/posts/` | Optional | List all MumTalk posts, newest first, paginated. |
-| `POST` | `api/mumchat/v1/posts/create/` | Required | Create a post for the authenticated user. |
-| `GET` | `api/mumchat/v1/posts/<post_id>/` | Optional | Get one post by `public_id`. |
-| `DELETE` | `api/mumchat/v1/posts/<post_id>/delete/` | Required | Delete one of the authenticated user's own posts. |
-| `GET` | `api/mumchat/v1/posts/me/` | Required | Intended to list the authenticated user's own posts, but currently shadowed by the detail route. See note below. |
-| `PATCH` | `api/mumchat/v1/posts/<post_id>/update/` | Required | Partially update one of the authenticated user's own posts. |
+| `GET` | `/api/mumchat/v1/posts/` | No | List all posts. |
+| `POST` | `/api/mumchat/v1/posts/create/` | Yes | Create a post owned by the authenticated user's anonymous hash. |
+| `GET` | `/api/mumchat/v1/posts/me/` | Yes | List posts owned by the authenticated user's anonymous hash. |
+| `GET` | `/api/mumchat/v1/posts/<post_id>/` | No | Retrieve one post by `public_id`. |
+| `DELETE` | `/api/mumchat/v1/posts/<post_id>/delete/` | Yes | Delete a post owned by the authenticated user. |
+| `PATCH` | `/api/mumchat/v1/posts/<post_id>/update/` | Yes | Partially update a post owned by the authenticated user. |
+| `POST` | `/api/mumchat/v1/posts/<post_id>/replies/create/` | Yes | Create a root reply or nested reply. |
 
-Routing note:
-
-`api/mumchat/v1/posts/me/` is currently declared after `api/mumchat/v1/posts/<post_id>/`. Because of that order, Django matches `me` as `<post_id>` first. So a frontend call to `GET api/mumchat/v1/posts/me/` currently behaves like a detail lookup for a post whose `public_id` is `"me"` and will normally return:
-
-```json
-{
-  "detail": "Post not found."
-}
-```
-
-Until the route order changes, do not rely on `api/mumchat/v1/posts/me/` for "my posts" in frontend flows.
-
-## 1. List All Posts
-
-Retrieve all MumChat posts across the platform.
-
-Endpoint:
+## List Posts
 
 ```txt
-GET api/mumchat/v1/posts/
+GET /api/mumchat/v1/posts/
 ```
 
-Auth:
+Auth: public.
 
-```txt
-Optional
-```
-
-Query examples:
-
-```txt
-GET api/mumchat/v1/posts/?page=1
-GET api/mumchat/v1/posts/?page=2&page_size=10
-```
-
-Success response: `200 OK`
+Success: `200 OK`
 
 ```json
 {
@@ -140,6 +134,8 @@ Success response: `200 OK`
       "public_id": "1cfa39e2-7f25-4e71-91e2-b9b4f8c71f57",
       "title": "Feeling anxious today",
       "content": "Has anyone else felt this way in the third trimester?",
+      "reply_count": 0,
+      "replies": [],
       "created_at": "2026-06-05T14:28:00Z",
       "updated_at": "2026-06-05T14:28:00Z"
     },
@@ -147,6 +143,8 @@ Success response: `200 OK`
       "public_id": "3b9c589c-ec7a-4d12-a40d-21a5c157fe10",
       "title": "Hospital bag tips",
       "content": "What did you actually use from your hospital bag?",
+      "reply_count": 0,
+      "replies": [],
       "created_at": "2026-06-04T10:15:00Z",
       "updated_at": "2026-06-04T10:15:00Z"
     }
@@ -154,29 +152,17 @@ Success response: `200 OK`
 }
 ```
 
-Frontend expectations:
+There is no search, category filter, image field, author display field, like count, or sort parameter.
 
-- Use `results` for rendering the feed.
-- Use `next` and `previous` for pagination controls or infinite loading.
-- There is currently no backend search, filtering, or ordering query support for this endpoint.
-
-## 2. Create Post
-
-Create a new anonymous MumChat post for the authenticated user.
-
-Endpoint:
+## Create Post
 
 ```txt
-POST api/mumchat/v1/posts/create/
+POST /api/mumchat/v1/posts/create/
 ```
 
-Header:
+Auth: required.
 
-```txt
-Authorization: Bearer <access_token>
-```
-
-Request body:
+Request:
 
 ```json
 {
@@ -187,12 +173,12 @@ Request body:
 
 Accepted fields:
 
-| Field | Type | Required by serializer | Notes |
+| Field | Type | Required by model | Serializer validation |
 | --- | --- | --- | --- |
-| `title` | string | No | Max 255 characters. Must be unique if provided. |
-| `content` | string | No | Max 300 characters. |
+| `title` | string | No | If supplied, must not be blank. Max 255. Unique. |
+| `content` | string | No | If supplied, must not be blank. Max 300. |
 
-Success response: `201 Created`
+Success: `201 Created`
 
 ```json
 {
@@ -200,125 +186,45 @@ Success response: `201 Created`
 }
 ```
 
-Frontend expectations:
+The create response does not include the created post. Refetch the list or detail view if the client needs the new `public_id`.
 
-- The create response does not include the created post object or `public_id`.
-- If the UI needs the new post data immediately, refetch the list after a successful create.
-- The backend derives ownership from the JWT user and does not accept an author field.
-
-Possible errors:
-
-`401 Unauthorized` when the token is missing or invalid.
-
-`400 Bad Request` for validation errors, for example a duplicate title or content longer than 300 characters:
+Validation error: `400 Bad Request`
 
 ```json
 {
-  "title": [
-    "mum chat post with this title already exists."
-  ]
+  "status": "error",
+  "message": "Validation failed.",
+  "errors": {
+    "content": [
+      "Content cannot be blank."
+    ]
+  }
 }
 ```
 
-## 3. Get Post Detail
-
-Fetch one MumChat post by its `public_id`.
-
-Endpoint:
-
-```txt
-GET api/mumchat/v1/posts/<post_id>/
-```
-
-Auth:
-
-```txt
-Optional
-```
-
-Example:
-
-```txt
-GET api/mumchat/v1/posts/1cfa39e2-7f25-4e71-91e2-b9b4f8c71f57/
-```
-
-Success response: `200 OK`
+Duplicate title error:
 
 ```json
 {
-  "public_id": "1cfa39e2-7f25-4e71-91e2-b9b4f8c71f57",
-  "title": "Feeling anxious today",
-  "content": "Has anyone else felt this way in the third trimester?",
-  "created_at": "2026-06-05T14:28:00Z",
-  "updated_at": "2026-06-05T14:28:00Z"
+  "status": "error",
+  "message": "Validation failed.",
+  "errors": {
+    "title": [
+      "mum chat post with this title already exists."
+    ]
+  }
 }
 ```
 
-Not found response: `404 Not Found`
-
-```json
-{
-  "detail": "Post not found."
-}
-```
-
-Frontend expectations:
-
-- `post_id` should be the post `public_id` returned from list/detail responses.
-- The path converter is currently `str`, but the lookup is against a UUID field. Invalid values will not resolve to a real post.
-
-## 4. Delete Post
-
-Delete one of the authenticated user's own posts.
-
-Endpoint:
+## List My Posts
 
 ```txt
-DELETE api/mumchat/v1/posts/<post_id>/delete/
+GET /api/mumchat/v1/posts/me/
 ```
 
-Header:
+Auth: required.
 
-```txt
-Authorization: Bearer <access_token>
-```
-
-Success response: `204 No Content`
-
-```txt
-No response body
-```
-
-Not found or not owner response: `404 Not Found`
-
-```json
-{
-  "detail": "Post not found or you do not have permission to delete this post."
-}
-```
-
-Frontend expectations:
-
-- There is no separate `403` for "not my post"; the backend returns `404` for both missing posts and permission mismatch.
-- On `204`, remove the post from local UI state or refetch the feed.
-
-## 5. List My Posts
-
-Intended endpoint for listing posts created by the authenticated user.
-
-Endpoint:
-
-```txt
-GET api/mumchat/v1/posts/me/
-```
-
-Header:
-
-```txt
-Authorization: Bearer <access_token>
-```
-
-Intended success response: `200 OK`
+Success: `200 OK`
 
 ```json
 {
@@ -330,6 +236,8 @@ Intended success response: `200 OK`
       "public_id": "1cfa39e2-7f25-4e71-91e2-b9b4f8c71f57",
       "title": "Feeling anxious today",
       "content": "Has anyone else felt this way in the third trimester?",
+      "reply_count": 0,
+      "replies": [],
       "created_at": "2026-06-05T14:28:00Z",
       "updated_at": "2026-06-05T14:28:00Z"
     }
@@ -337,32 +245,51 @@ Intended success response: `200 OK`
 }
 ```
 
-Current behavior:
+The route is declared before `/api/mumchat/v1/posts/<post_id>/`, so `me` is not shadowed by the detail route.
 
-Because of route ordering, this path is currently shadowed by the detail route and will normally return `404` as described in the routing note above.
-
-Frontend expectations:
-
-- Treat this endpoint as unavailable until the backend route order is fixed.
-- There is currently no owner marker in the public feed response, so the frontend cannot reliably infer "my posts" from `GET api/mumchat/v1/posts/`.
-
-## 6. Update Post
-
-Update one of the authenticated user's own posts.
-
-Endpoint:
+## Get Post Detail
 
 ```txt
-PATCH api/mumchat/v1/posts/<post_id>/update/
+GET /api/mumchat/v1/posts/<post_id>/
 ```
 
-Header:
+Auth: public.
+
+`post_id` is `MumChatPost.public_id`.
+
+Success: `200 OK`
+
+```json
+{
+  "public_id": "1cfa39e2-7f25-4e71-91e2-b9b4f8c71f57",
+  "title": "Feeling anxious today",
+  "content": "Has anyone else felt this way in the third trimester?",
+  "reply_count": 0,
+  "replies": [],
+  "created_at": "2026-06-05T14:28:00Z",
+  "updated_at": "2026-06-05T14:28:00Z"
+}
+```
+
+Missing post: `404 Not Found`
+
+```json
+{
+  "status": "error",
+  "message": "Not found.",
+  "errors": null
+}
+```
+
+## Update Post
 
 ```txt
-Authorization: Bearer <access_token>
+PATCH /api/mumchat/v1/posts/<post_id>/update/
 ```
 
-Request body:
+Auth: required. The authenticated user must own the post.
+
+Request:
 
 ```json
 {
@@ -371,7 +298,7 @@ Request body:
 }
 ```
 
-Partial request bodies are accepted even though the method is `PUT`:
+Partial updates are accepted:
 
 ```json
 {
@@ -379,127 +306,61 @@ Partial request bodies are accepted even though the method is `PUT`:
 }
 ```
 
-Success response: `200 OK`
+Success: `200 OK`
 
 ```json
 {
-  "detail": "Post updated successfully"
+  "detail": "Post updated successfully."
 }
 ```
 
-Not found or not owner response: `404 Not Found`
+Missing post or not owner: `404 Not Found`
 
 ```json
 {
-  "detail": "Post not found or you do not have permission to edit this post."
+  "status": "error",
+  "message": "Not found.",
+  "errors": null
 }
 ```
 
-Possible validation error: `400 Bad Request`
+The backend intentionally does not distinguish between missing content and content owned by another user.
 
-```json
-{
-  "content": [
-    "Ensure this field has no more than 300 characters."
-  ]
-}
-```
-
-Frontend expectations:
-
-- The update response does not include the updated post object.
-- Refetch detail/list data after a successful update if the UI needs fresh timestamps or updated text.
-- There is no separate `PATCH` endpoint right now.
-
-## Rate Limit Headers
-
-MumChat paths are handled by the global rate limiter. Successful responses may include:
+## Delete Post
 
 ```txt
-X-MomAid-Tier: anon
-X-MomAid-Limit: 60
-X-MomAid-Remaining: 59
+DELETE /api/mumchat/v1/posts/<post_id>/delete/
 ```
 
-The tier is usually:
+Auth: required. The authenticated user must own the post.
 
-- `anon` for unauthenticated MumChat requests.
-- `user` for authenticated MumChat requests.
+Success: `204 No Content`
 
-Rate limit response: `429 Too Many Requests`
+```txt
+No response body
+```
+
+Missing post or not owner: `404 Not Found`
 
 ```json
 {
-  "detail": "Request limit exceeded for user.",
-  "retry_after": 42
+  "status": "error",
+  "message": "Not found.",
+  "errors": null
 }
 ```
 
-The response may also include:
+## Create Reply
+
+Create a root reply to a post or a nested reply to another reply.
 
 ```txt
-X-MomAid-Retry-After: 42
+POST /api/mumchat/v1/posts/<post_id>/replies/create/
 ```
 
-## Frontend Implementation Notes
+Auth: required.
 
-- Use `public_id` everywhere the URL asks for `<post_id>`.
-- Show posts as anonymous. The API does not expose author identity or display metadata.
-- For create/update/delete, assume success responses are message-only or empty and refetch what the screen needs.
-- For edit/delete ownership checks, the backend uses the authenticated user's salted hash. A user can only modify posts created under the same account.
-- `title` is currently unique globally. If the product does not want unique titles, the backend model will need to change.
-- Empty or missing `title` and `content` may pass serializer validation because both model fields allow `null` and `blank`. Frontend validation should enforce any stricter UX rules needed by the product.
-
-
-# Reply System (Updated)
-
-## Reply Structure
-
-Posts now include:
-
-```json
-{
-  "public_id": "...",
-  "title": "...",
-  "content": "...",
-  "reply_count": 2,
-  "replies": [
-    {
-      "public_id": "...",
-      "content": "Root reply",
-      "parent_reply": null,
-      "is_root_reply": true,
-      "children": [
-        {
-          "public_id": "...",
-          "content": "Nested reply",
-          "parent_reply": "...",
-          "is_root_reply": false,
-          "children": [],
-          "created_at": "2026-06-05T15:00:00Z"
-        }
-      ],
-      "created_at": "2026-06-05T14:50:00Z"
-    }
-  ]
-}
-```
-
-### Create Reply
-
-Endpoint:
-
-```txt
-POST api/mumchat/v1/posts/<post_id>/replies/create/
-```
-
-Headers:
-
-```txt
-Authorization: Bearer <access_token>
-```
-
-Reply to a post:
+Root reply request:
 
 ```json
 {
@@ -507,29 +368,69 @@ Reply to a post:
 }
 ```
 
-Reply to another reply:
+Nested reply request:
 
 ```json
 {
-  "content": "Thanks for sharing.",
-  "parent_id": "<reply_public_id>"
+  "content": "Thank you for sharing.",
+  "parent_id": "8f7c8f10-8e6b-4504-944f-85c0b2c23235"
 }
 ```
 
-Success:
+`parent_id` is read manually from `request.data` and must be a `MumChatReply.public_id` for the same post.
+
+Success: `201 Created`
 
 ```json
 {
-  "reply": "Thanks for sharing.",
-  "posted_at": "2026-06-05T15:00:00Z"
+  "reply": "Thank you for sharing.",
+  "posted_at": "2026-06-05T15:10:00Z"
 }
 ```
 
-### Reply Rules
+Blank reply: `400 Bad Request`
 
-- Replies support nested threading.
-- Maximum nesting depth is 5.
-- Empty replies are rejected.
-- Only root replies appear directly under `replies`.
-- Nested replies are returned recursively through `children`.
-- Reply ownership remains anonymous.
+```json
+{
+  "status": "error",
+  "message": "Validation failed.",
+  "errors": {
+    "content": [
+      "Reply cannot be blank."
+    ]
+  }
+}
+```
+
+Maximum depth exceeded: `400 Bad Request`
+
+```json
+{
+  "detail": "Maximum reply depth of 5 reached."
+}
+```
+
+Reply rules:
+
+- Root replies have `parent_reply: null`.
+- Nested replies are returned recursively in `children`.
+- Maximum nesting depth is 5 as enforced by `MumChatReplyCreateView.MAX_REPLY_DEPTH`.
+- Reply ownership is anonymous and not exposed.
+
+## Rate Limits
+
+MumChat uses the global limits and `UserRateThrottle` on create post and create reply.
+
+| Caller | Limit |
+| --- | --- |
+| anonymous list/detail | `20/minute` |
+| authenticated requests | `1000/day` |
+
+Rate-limit response: `429 Too Many Requests`
+
+```json
+{
+  "detail": "Too many requests.",
+  "retry_after": 42
+}
+```

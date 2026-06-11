@@ -1,172 +1,183 @@
-# MumAid API
+# MomAid Backend
 
-MumAid API is a modular, scalable RESTful backend designed to support maternal healthcare services and related wellness needs. It provides a centralized platform for managing user accounts, healthcare resources, maternal support tools, and community-driven content.
+Purpose: give engineers enough operational and architectural context to run, test, modify, and deploy the MomAid API without reading the whole repository first.
 
-The API is structured into independent modules (apps), each responsible for a specific domain such as authentication, healthcare services, nutrition, and support systems. This modular architecture ensures maintainability, scalability, and ease of extension as the platform grows.
+MomAid is a Django REST Framework backend for a maternal health mobile product. It serves account onboarding, JWT authentication, maternal profile data, partner linking and tasks, video feeds, anonymous MumChat posts, healthcare resources, remedies, exercises, and breast milk support listings.
 
----
+Production base URL:
 
-## 🚀 Overview
-
-MumAid API provides endpoints for:
-
-* User authentication and account management
-* Healthcare services and provider resources
-* Maternal support tools (remedies, exercises, and milk support)
-* Opportunities and admin-managed programs
-* Partner support and engagement resources
-* Community feeds and content updates
-* General API access and system endpoints
----
-
-## 🌐 Base URL
-production:
-```
+```txt
 https://momaid-backend.onrender.com/
 ```
 
-development:
-```
+Local base URL:
+
+```txt
 http://localhost:8000/
 ```
 
----
+OpenAPI schema and Swagger UI are exposed at:
 
-## ⚙️ Getting Started
+```txt
+GET /api/schema/
+GET /api/docs/
+```
 
-### Prerequisites
+## Local Setup
 
-* Python (>=3.12+ recommended)
-* pip
-* Database (PostgreSQL)
-* Docker
+Prerequisites: Docker, Docker Compose, and a shell with access to this repository.
 
-### Installation
+Run locally in four commands:
 
 ```bash
 git clone git@github.com:rufoabrahamguyo/momAid-backend.git
 cd momAid-backend
-docker compose --build
-
+cp .env.example .env
+docker compose up --build
 ```
 
-**NB:// depending on your os, docker compose may fail and its highly encouraged to use **docker-compose** **
+The API runs on `http://localhost:8000/`. Mailpit runs on `http://localhost:8025/`. Adminer runs on `http://localhost:8080/`.
 
-### Running the Server
+The Compose stack starts PostgreSQL, Redis, the Django API, a Celery worker, Celery beat, Mailpit, and Adminer. The API container runs migrations through `docker/scripts/entrypoint.sh` before starting `python manage.py runserver 0.0.0.0:8000`.
 
-```bash
-docker compose up
+Required local environment keys:
+
+```env
+SECRET_KEY=local-development-secret
+POSTGRES_DB=momaid
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+REDIS_URL=redis://redis:6379/0
+CLOUDINARY_CLOUD_NAME=<cloudinary-cloud-name>
+CLOUDINARY_CLOUD_API_KEY=<cloudinary-api-key>
+CLOUDINARY_CLOUD_API_SECRET=<cloudinary-api-secret>
+ANONYMOUS_SALT=<stable-local-salt>
 ```
 
----
+Cloudinary keys are read at Django settings import time. Use real development credentials or the server will fail before requests are served.
 
-## 🔐 Authentication
+## Project Structure
 
-This API uses token-based authentication.
+```txt
+api/apps/
+  accounts/        Custom User, MotherProfile, PartnerProfile, registration, OTP, JWT profile APIs.
+  feeds/           Video, VideoAttributes, Comment, VideoHistory APIs.
+  healthcare/      EmergencyContact and Hospital APIs.
+  mumchat/         Anonymous MumChatPost and MumChatReply APIs.
+  partner/         InviteCode, PartnerTask, PartnerTaskCompletion APIs.
+  remedies/        BabyCondition and nested Remedy read APIs.
+  exercises/       Exercise read APIs.
+  milk_support/    MilkListing APIs with nearby search.
+  opportunities/   Model/ViewSet scaffold; URL router is currently commented out.
+  welcome/         Health check endpoint.
+api/core/
+  exceptions.py    DRF exception normalization.
+  middleware.py    process_exception logging and global rate limiter.
+  pagination.py    Shared page-number pagination classes.
+  renderers.py     Shared utility functions.
+  throttles.py     DRF throttle classes for auth, OTP, login, and upload scopes.
+api/mumaid/
+  settings/        base, dev, prod, and test settings.
+  celery.py        Celery application.
+  urls.py          Root URL routing.
+docker/
+  Dockerfiles and process startup scripts.
+requirements/
+  base.txt, dev.txt, prod.txt.
+tests/
+  Pytest configuration support. There are currently no committed test modules beyond conftest.py.
+```
 
-Include the token in your request headers:
+## API Documentation
+
+Start with the common contract:
+
+- [API Reference](./docs/api/README.md)
+- [Authentication API](./docs/api/auth.md)
+- [Feeds API](./docs/api/feeds.md)
+- [MumChat API](./docs/api/mumchat.md)
+- [Partner API](./docs/api/partner.md)
+- [Healthcare, Milk Support, Remedies, And Exercises API](./docs/api/resources.md)
+- [Local Setup Notes](./docs/api/local-setup.md)
+- [Architecture](./docs/architecture.md)
+
+Authentication uses Simple JWT:
 
 ```http
-Authorization: Bearer <your_token>
+Authorization: Bearer <access_token>
 ```
 
-To obtain a token, use the verify-otp or login endpoint (see Auth docs below).
+Tokens are issued by:
 
----
-
-## 📚 API Documentation
-
-Detailed endpoint documentation is split into modules for scalability:
-
-* [Auth](./docs/auth.md)
-* [Feeds](./docs/feeds.md)
-* [Partner](./docs/partner.md)
-* [Mumtalk](./docs/mumtalk.md)
----
-
-## 📦 Request & Response Format
-
-### Success Response
-
-```json
-{
-  "detail": "success message",
-  "status": 201
-}
+```txt
+POST /api/auth/v1/login/
+POST /api/auth/v1/verify/token/
 ```
 
-### Error Response
+Access tokens live for 120 minutes. Refresh tokens live for 1 day, rotate on refresh, and are blacklisted after rotation.
 
-```json
-{
-  "detail": "error message",
-  "status": 400/401/404/500
-}
-```
+## Tests And Quality Gates
 
----
-
-## ⚠️ HTTP Status Codes
-
-| Code | Meaning               |
-| ---- | --------------------- |
-| 200  | OK                    |
-| 201  | Created               |
-| 400  | Bad Request           |
-| 401  | Unauthorized          |
-| 404  | Not Found             |
-| 500  | Internal Server Error |
-
----
-
-## 🔑 Environment Variables
-
-Set up your environment variables before running the project.
-
-1. Create a `.env` file
-
-Create a .env file in the root directory of the project.
-
-2. Copy from the example file
-
-Copy the contents of **.env.example** into your **.env** file:
+Run the test suite:
 
 ```bash
-cp .env.example .env
+docker compose run --rm api pytest
 ```
 
-3. Update values
+Run linting:
 
-Edit the **.env** file and provide the required values
+```bash
+docker compose run --rm api ruff check .
+```
 
----
+Pytest is configured in `pytest.ini` with:
 
-## 🧪 Testing
+```txt
+DJANGO_SETTINGS_MODULE=mumaid.settings.test
+pythonpath=api
+testpaths=tests api/apps
+```
 
-You can test endpoints using:
+The current repository has test configuration but no committed test modules beyond `tests/conftest.py`. New behavior should include focused tests under `tests/` or the owning `api/apps/<domain>/` package.
 
-* Postman
-* Thunder Client
-* cURL
+## Contributing
 
+1. Keep changes scoped to the domain app that owns the behavior.
+2. Add or update serializers, views, permissions, and tests together when changing API behavior.
+3. Use public identifiers consistently where the API already exposes them. For example, MumChat uses `public_id` in URLs; feeds comments still use integer `id` in comment paths.
+4. Preserve existing response shapes unless the client contract is intentionally changing.
+5. Run `pytest` and `ruff check .` before opening a pull request.
+6. Update docs in the same change when endpoints, fields, auth requirements, rate limits, or deployment behavior change.
 
----
+## Deployment
 
-## 🤝 Contributing
+Production is configured for Render using Docker.
 
-Contributions are welcome.
+The API image is built from `docker/Dockerfile.api`. Runtime settings are loaded from `mumaid.settings.prod`, which requires:
 
-1. Fork the repository
-2. Create a new branch (`feature/your-feature`)
-3. Commit your changes
-4. Push to your branch
-5. Open a Pull Request
+```env
+SECRET_KEY=<strong-secret>
+ALLOWED_HOSTS=<comma-separated-hosts>
+CORS_ALLOWED_ORIGINS=<comma-separated-origins>
+DATABASE_URL=<render-postgres-url>
+REDIS_URL=<render-redis-url>
+CLOUDINARY_CLOUD_NAME=<cloudinary-cloud-name>
+CLOUDINARY_CLOUD_API_KEY=<cloudinary-api-key>
+CLOUDINARY_CLOUD_API_SECRET=<cloudinary-api-secret>
+ANONYMOUS_SALT=<stable-secret-salt>
+BREVO_API_KEY=<brevo-api-key>
+DEFAULT_FROM_EMAIL=<verified-sender>
+SENTRY_DSN=<optional-sentry-dsn>
+```
 
----
+`docker/scripts/entrypoint.sh` applies migrations and runs `collectstatic --noinput --clear`. `docker/scripts/start-api.sh` starts Gunicorn:
 
-## 📄 License
+```bash
+gunicorn mumaid.wsgi:application --bind 0.0.0.0:${PORT:-8000}
+```
 
-This project is licensed under the MIT License.
-See the [LICENSE](./LICENSE) file for details.
+Production security settings enforce HTTPS, secure cookies, HSTS, `X_FRAME_OPTIONS=DENY`, Redis-backed Django cache/session storage, Cloudinary media storage, and WhiteNoise static file storage.
 
----
+Celery worker and beat images are defined in `docker/Dockerfile.worker`. `docker-compose.prod.yml` currently leaves worker and beat services commented out with a note to enable them when the deployment plan supports additional processes.
