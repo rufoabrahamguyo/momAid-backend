@@ -83,7 +83,7 @@ jobs:
         run: docker compose up -d api
 
       - name: Run tests
-        run: docker compose exec -T api pytest api/apps/accounts/tests/ -v --tb=short
+        run: docker compose exec -T api pytest api/apps/accounts/tests/ -v --tb=short --maxfail=1 -x
 
       - name: Teardown
         if: always()
