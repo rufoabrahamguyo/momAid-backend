@@ -1,5 +1,5 @@
-from django.db import models
 from core.models import TimeStampedModel
+from django.db import models
 
 
 class Exercise(TimeStampedModel):
