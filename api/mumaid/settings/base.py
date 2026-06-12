@@ -48,7 +48,7 @@ LOCAL_APPS = [
     "apps.accounts",
     "apps.opportunities",
     "apps.remedies",
-    "apps.exercises",
+    # "apps.exercises",
     "apps.milk_support",
     "apps.partner",
     "apps.healthcare",
