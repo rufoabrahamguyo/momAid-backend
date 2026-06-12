@@ -46,14 +46,14 @@ CELERY_BROKER_USE_SSL = _SSL_OPTS
 CELERY_REDIS_BACKEND_USE_SSL = _SSL_OPTS
 
 
-EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
+EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
 
 ANYMAIL = {
-    "BREVO_API_KEY": env("BREVO_API_KEY"),
+    "RESEND_API_KEY": env("RESEND_API_KEY"),
 }
 
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
-SERVER_EMAIL = env("DEFAULT_FROM_EMAIL")
+
 
 STORAGES = {
     "default": {
