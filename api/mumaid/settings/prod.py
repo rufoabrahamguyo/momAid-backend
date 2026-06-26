@@ -46,8 +46,6 @@ CELERY_BROKER_USE_SSL = _SSL_OPTS
 CELERY_REDIS_BACKEND_USE_SSL = _SSL_OPTS
 
 
-INSTALLED_APPS += ["anymail"]
-
 EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
 
 ANYMAIL = {
