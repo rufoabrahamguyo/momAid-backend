@@ -27,7 +27,7 @@ def generate_and_send_otp(*, email: str) -> None:
     """Generate a 6-digit OTP, store in cache, fire email task."""
     otp = str(secrets.randbelow(900_000) + 100_000)
     cache.set(_otp_cache_key(email), otp, timeout=OTP_TTL)
-    tasks.send_otp_email.delay(email, otp)
+    tasks.send_otp_email(email, otp)
 
 
 def verify_otp(*, email: str, otp: str) -> bool:
