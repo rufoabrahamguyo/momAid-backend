@@ -13,7 +13,4 @@ class ExerciseSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "video_url",
-            "thumbnail_url",
-            "duration_seconds",
-            "order",
         )

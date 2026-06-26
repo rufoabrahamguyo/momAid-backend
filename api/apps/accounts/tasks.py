@@ -26,7 +26,7 @@ def send_otp_email(self, recipient_email: str, otp: str) -> None:
     )
     msg.content_subtype = "html"
     msg.send()
-    logger.info("OTP email sent to %s", recipient_email)
+    logger.info("OTP [%s] email sent successfully to %s", otp, recipient_email)
 
 
 @shared_task(
