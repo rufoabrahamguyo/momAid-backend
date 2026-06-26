@@ -59,4 +59,4 @@ MIDDLEWARE += [
 INTERNAL_IPS = ["127.0.0.1"]
 
 
-LOGGING["loggers"]["django.db.queries"]["level"] = "DEBUG"
+LOGGING["loggers"]["django.db.backends"]["level"] = "DEBUG"
