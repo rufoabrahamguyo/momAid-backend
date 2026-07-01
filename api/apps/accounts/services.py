@@ -44,7 +44,6 @@ def resend_otp(*, email: str) -> None:
     cache.delete(_otp_cache_key(email))
     generate_and_send_otp(email=email)
 
-
 @transaction.atomic
 def register_user(*, email: str, password: str, role: str) -> User:
     """
@@ -171,3 +170,6 @@ def upload_profile_image(*, user: User, file) -> str:
 def _make_tokens(user: User) -> dict:
     refresh = RefreshToken.for_user(user)
     return {"access": str(refresh.access_token), "refresh": str(refresh)}
+
+
+

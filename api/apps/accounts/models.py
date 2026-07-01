@@ -10,7 +10,6 @@ from django.contrib.auth.models import (
 from django.db import models
 from django.utils import timezone
 
-
 class UserManager(BaseUserManager):
 
     def create_user(self, email, password=None, **extra_fields):
@@ -33,7 +32,18 @@ class UserManager(BaseUserManager):
             raise ValueError("Superuser must have is_staff=True.")
         return self.create_user(email, password, **extra_fields)
 
+def generate_nickname(anonymous_id: str) -> str:
+    """Generate a nickname based on the anonymous_id."""
+    anonymous_str = str(anonymous_id)
+    has_val = int(anonymous_str[0:8], 16)  
 
+    adjectives = ['Brave', 'Clever', 'Swift', 'Mighty', 'Gentle', 'Fierce', 'Wise', 'Bold', 'Noble', 'Lively']
+    nouns = ['Lion', 'Tiger', 'Bear', 'Eagle', 'Shark', 'Wolf', 'Panther', 'Falcon', 'Dragon', 'Phoenix']
+
+    adjective = adjectives[has_val % len(adjectives)]
+    noun = nouns[(has_val // len(adjectives)) % len(nouns)]
+
+    return f"{adjective}{noun}{has_val % 1000:03d}"
 class User(AbstractBaseUser, PermissionsMixin):
 
     class Role(models.TextChoices):
@@ -52,6 +62,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     image = CloudinaryField(null=True, blank=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True, db_index=True)
+
+    anonymous_id = models.UUIDField(
+        default=uuid.uuid4, editable=False, unique=True, db_index=True
+    )
+    nickname = models.CharField(max_length=50, null=True, blank=True)
+
     joined_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -65,8 +81,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = "Users"
         ordering = ["-joined_at"]
 
+    def save(self, *args, **kwargs):
+        self.nickname = generate_nickname(self.anonymous_id)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.email
+
+    
 
 
 class MotherProfile(TimeStampedModel):
