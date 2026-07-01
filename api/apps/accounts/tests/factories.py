@@ -1,3 +1,4 @@
+import uuid
 import factory
 from django.contrib.auth import get_user_model
 from factory.django import DjangoModelFactory
@@ -17,6 +18,7 @@ class UserFactory(DjangoModelFactory):
     password = factory.PostGenerationMethodCall("set_password", "testpass123")
     role = User.Role.MOTHER
     is_active = True
+    anonymous_id = factory.LazyFunction(uuid.uuid4)
 
 
 class MotherUserFactory(UserFactory):

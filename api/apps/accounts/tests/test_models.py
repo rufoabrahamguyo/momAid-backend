@@ -5,7 +5,8 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.utils import timezone
 
-from apps.accounts.models import MotherProfile
+from apps.accounts.models import MotherProfile, generate_nickname
+
 
 from .factories import MotherProfileFactory, MotherUserFactory, PartnerUserFactory
 
@@ -50,6 +51,27 @@ class TestUserModel:
     def test_is_active_default_true(self):
         user = MotherUserFactory()
         assert user.is_active is True
+
+    def test_anonymous_id_is_unique_and_not_null(self):
+        user = MotherUserFactory()
+        assert user.anonymous_id is not None
+        another_user = MotherUserFactory()
+        assert user.anonymous_id != another_user.anonymous_id
+    
+    def test_nickname_is_generated_from_anonymous_id(self):
+        user = MotherUserFactory()
+        assert user.nickname is not None
+
+        expected_nickname = generate_nickname(user.anonymous_id)
+        assert user.nickname == expected_nickname
+    
+    def test_nickname_cannot_be_manually_overwritten(self):
+        user = MotherUserFactory(nickname="CustomNick")
+        
+        expected_nickname = generate_nickname(user.anonymous_id)
+        assert user.nickname == expected_nickname
+        assert user.nickname != "CustomNick"
+    
 
 
 @pytest.mark.django_db
